@@ -20,7 +20,11 @@ shinyUI(fluidPage(
       #i# Would be better to change to select an output style
       selectInput("prog", "SLiMSuite REST program:", c("None"),selected="None"),
       # Set parameters for REST job retrieval
-      textInput("jobid", "REST Server Job ID:", settings$jobid),
+      wellPanel("Input a Job ID or a FASTA file:",
+      # Input: Select a file or upload a FASTA file----
+      textInput("jobid", "REST Server Job ID:", settings$jobid), 
+      fileInput("file", "REST Server FASTA file(maximum 30MB):", multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain",".csv"))
+      ),
       textInput("password", "Job Password [Optional]:", ""),
       selectInput("restout", "REST Output to retrieve:", c("status"), "status"),
       #X#textInput("restout", "REST Output to retrieve:", "status"),

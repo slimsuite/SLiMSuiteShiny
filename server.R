@@ -1,7 +1,8 @@
 #i# See the `main.R` file for version, contact and license information.
 #i# The `main.R` script loads libraries and contains the initial parameter settings and functions.
 source("main.R")
-
+# Maximum the size of input fasta file
+shiny.maxRequestSize=30*1024^2
 # This is the code that goes inside the server object
 shinyServer(function(input, output, session) {
 
