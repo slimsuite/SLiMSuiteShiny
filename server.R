@@ -1,8 +1,10 @@
 #i# See the `main.R` file for version, contact and license information.
 #i# The `main.R` script loads libraries and contains the initial parameter settings and functions.
 source("main.R")
+
 # Maximum the size of input fasta file
 shiny.maxRequestSize=30*1024^2
+
 # This is the code that goes inside the server object
 shinyServer(function(input, output, session) {
 
@@ -30,8 +32,19 @@ shinyServer(function(input, output, session) {
         withProgress(message="Checking JobID", value=0, {
           adata$data <- setupData()
           incProgress(1/4)
-          #i# First, check whether it looks like a JobID
-          if(isJobID(input$jobid) == FALSE){
+          #i# First, check FASTA file
+          if(!is.null(input$file)){
+            if((isFASTAFile(input$file)==FALSE)){
+              adata$data$status = paste("ERROR:",input$file,"is an invalid FASTA file.")
+              return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+            }else{
+            # Change the FASTA into JobID
+              sequences <- readChar(input$file,file.info(input$file)$size)
+            }}
+          #i# Transfer FASTA file or Uniprot ID to JobID 
+          # input: sequences, uniprotid
+          #i# Second, check whether it looks like a JobID
+            if(isJobID(input$jobid) == FALSE){
             adata$data$status = paste("ERROR:",input$jobid,"is an invalid JobID.")
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
           }
