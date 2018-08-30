@@ -57,7 +57,7 @@ load_or_install = function(package_names)
   } 
 }
 # Load or install required libraries
-load_or_install(c("shiny", "httr", "DT", "markdown","plyr"))
+load_or_install(c("shiny", "httr", "DT", "markdown","plyr","tools"))
 
 ############### ::: SET DEFAULTS ::: ##################
 settings = list(
@@ -105,6 +105,11 @@ isJobID <- function(jobid){
   if(is.na(as.numeric(jobid))){ return(FALSE) }
   if(is.na(as.integer(substr(jobid,1,6)))){ return(FALSE) }
   if(is.na(as.integer(substr(jobid,7,11)))){ return(FALSE) }
+  return(TRUE)
+}
+### Check whether a FASTA file looks legit and return True or False
+isFASTAFile <- function(FASTA){
+  if((file_ext(FASTA)=="fasta")!=TRUE){ return(FALSE) }
   return(TRUE)
 }
 ### Check whether Job has run
