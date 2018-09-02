@@ -68,7 +68,7 @@ settings = list(
   #i# Standard REST server &rest keys
   stdkeys = c("status", "version", "ini", "log", "warnings", "errors", "outfmt", "help", "jobid", "intro", "prog"),
   #i# Subset of REST server keys that are not returned by restKeys()
-  restkeys = c("errors", "outfmt", "help", "jobid", "intro", "prog"),
+  restkeys = c("errors", "outfmt", "help", "intro", "prog"),
   #i# Define REST output formats
   outfmts = c("none","text","csv","tsv","log"),
   csv = c("main","occ"),
@@ -107,9 +107,10 @@ isJobID <- function(jobid){
   if(is.na(as.integer(substr(jobid,7,11)))){ return(FALSE) }
   return(TRUE)
 }
-### Check whether a FASTA file looks legit and return True or False
-isFASTAFile <- function(FASTA){
-  if((file_ext(FASTA)=="fasta")!=TRUE){ return(FALSE) }
+### Check whether a file exists and return True or False
+isFile <- function(FASTA){
+  if(length(FASTA)==0){return(FALSE)}
+  #if(file_ext(FASTA)=="fasta"){return(TRUE)}
   return(TRUE)
 }
 ### Check whether Job has run
@@ -152,6 +153,19 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
     logdata = logdata[,c(4,1,2,3)]
     return(logdata) 
   }
+}
+
+getSequences <- function(se){
+  joburl = paste0(settings$resturl,"slimfinder&seqin=",se)
+  result <- readLines(joburl,warn=FALSE) 
+  return(substr(result[96], 20,30)) 
+}
+
+### Return a JobID(Input: sequences) with REST output
+getUniprotID <- function(id){
+  joburl = paste0(settings$resturl,"slimfinder&uniprotid=",id)
+  result <- readLines(joburl,warn=FALSE) 
+  return(substr(result[96], 20,30))
 }
 
 ############### ::: UPDATE DATA ::: ##################
