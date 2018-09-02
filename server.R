@@ -13,7 +13,8 @@ shinyServer(function(input, output, session) {
       data = setupData()
   )
   #i# Can update in a render function using adata$data = ...
-  # JobID to register the jobid in program
+  
+  #i# JobID to register the jobid in program (UniProt -> JobID; Sequences -> JobID; JobID)
   JobID <- reactiveVal(value = settings$jobid, label = NULL)
   
   #i# Check whether a jobID looks legit and return True or False
@@ -43,14 +44,13 @@ shinyServer(function(input, output, session) {
               sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
               sequences = gsub("[\r\n\t]", "", sequences)
               JobID(getSequences(sequences))
-              }
+            }
+            #i# second, check UniprotID
           }else if(!is.null(input$uniprotid)){
             #uniprotid <- list("",input$uniprotid)
             JobID(getUniprotID(input$uniprotid))
+            #i# Next, check Job for completion
           }else if(!(is.null(input$jobid))){
-            #i# Transfer FASTA file or Uniprot ID to JobID 
-            # input: sequences, uniprotid
-            #i# Second, check whether it looks like a JobID
             if(isJobID(input$jobid) == FALSE){
             adata$data$status = paste("ERROR:",input$jobid,"is an invalid JobID.")
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
@@ -63,7 +63,7 @@ shinyServer(function(input, output, session) {
           }
           incProgress(1/4)
           Sys.sleep(0.5)
-          #i# Next, check Job for completion
+          #i# Check the JobID
           jcheck = checkJob(JobID(),input$password)
           if(jcheck != TRUE){
             adata$data$status = jcheck
