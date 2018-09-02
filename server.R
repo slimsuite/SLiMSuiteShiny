@@ -62,6 +62,7 @@ shinyServer(function(input, output, session) {
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
           }
           incProgress(1/4)
+          Sys.sleep(0.5)
           #i# Next, check Job for completion
           jcheck = checkJob(JobID(),input$password)
           if(jcheck != TRUE){
@@ -71,6 +72,7 @@ shinyServer(function(input, output, session) {
           incProgress(1/4)
           adata$data$restkeys = c(getRestKeys(JobID(),input$password),settings$restkeys)
           incProgress(1/4)
+          Sys.sleep(0.5)
         })  
         progx = length(adata$data$restkeys)
         withProgress(message="Retrieving data", value=0, {
