@@ -13,7 +13,8 @@ shinyServer(function(input, output, session) {
       data = setupData()
   )
   #i# Can update in a render function using adata$data = ...
-
+  # JobID to register the jobid in program
+  JobID <- reactiveVal(value = settings$jobid, label = NULL)
   
   #i# Check whether a jobID looks legit and return True or False
   # isJobID <- function(jobid){
@@ -34,35 +35,47 @@ shinyServer(function(input, output, session) {
           incProgress(1/4)
           #i# First, check FASTA file
           if(!is.null(input$file)){
-            if((isFASTAFile(input$file)==FALSE)){
-              adata$data$status = paste("ERROR:",input$file,"is an invalid FASTA file.")
+            if(!(isFile(input$file))){
+              adata$data$status = paste("ERROR:",input$file,"is an invalid path.")
               return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
             }else{
-            # Change the FASTA into JobID
-              sequences <- readChar(input$file,file.info(input$file)$size)
-            }}
-          #i# Transfer FASTA file or Uniprot ID to JobID 
-          # input: sequences, uniprotid
-          #i# Second, check whether it looks like a JobID
+              file1 = input$file
+              sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
+              sequences = gsub("[\r\n\t]", "", sequences)
+              JobID(getSequences(sequences))
+              }
+          }else if(!is.null(input$uniprotid)){
+            #uniprotid <- list("",input$uniprotid)
+            JobID(getUniprotID(input$uniprotid))
+          }else if(!(is.null(input$jobid))){
+            #i# Transfer FASTA file or Uniprot ID to JobID 
+            # input: sequences, uniprotid
+            #i# Second, check whether it looks like a JobID
             if(isJobID(input$jobid) == FALSE){
             adata$data$status = paste("ERROR:",input$jobid,"is an invalid JobID.")
+            return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+            }else{
+              JobID(input$jobid)
+            }
+          }else{
+            adata$data$status = paste("ERROR: invalid Input.")
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
           }
           incProgress(1/4)
           #i# Next, check Job for completion
-          jcheck = checkJob(input$jobid,input$password)
+          jcheck = checkJob(JobID(),input$password)
           if(jcheck != TRUE){
             adata$data$status = jcheck
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
           }
           incProgress(1/4)
-          adata$data$restkeys = c(getRestKeys(input$jobid,input$password),settings$restkeys)
+          adata$data$restkeys = c(getRestKeys(JobID(),input$password),settings$restkeys)
           incProgress(1/4)
         })  
         progx = length(adata$data$restkeys)
         withProgress(message="Retrieving data", value=0, {
           for(ikey in adata$data$restkeys){
-            adata$data[[ikey]] = getRestOutput(input$jobid,ikey,password=input$password)
+            adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)
             incProgress(1/progx)
           }
           updateSelectInput(session, "prog",
@@ -141,12 +154,12 @@ shinyServer(function(input, output, session) {
   
   # HMTL output or URL linking to Job on REST server
   output$retrieve <- renderUI({
-    if(isJobID(input$jobid)){
-      joburl = paste0(settings$resturl,"retrieve&jobid=",input$jobid,"&password=",input$password,"&rest=parse")
+    if(isJobID(JobID())){
+      joburl = paste0(settings$resturl,"retrieve&jobid=",JobID(),"&password=",input$password,"&rest=parse")
       joblink = paste0("<p>Click here to open the job on the SLiMSuite REST server:</p>\n<p><a href=\"",joburl,"\">",joburl,"</a></p>\n")
       return(HTML(joblink))
     }else{
-      return(HTML(paste("<b>ERROR:",input$jobid,"is an invalid JobID.</b>\n"),sep="\n",collapse="\n"))
+      return(HTML(paste("<b>ERROR:",JobID(),"is an invalid JobID.</b>\n"),sep="\n",collapse="\n"))
     }
   })
   
