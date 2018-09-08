@@ -155,16 +155,33 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
   }
 }
 
-getSequences <- function(se){
-  joburl = paste0(settings$resturl,"slimfinder&seqin=",se)
-  result <- readLines(joburl,warn=FALSE) 
+### Return a JobID(Input: sequences) with REST output
+getSequences <- function(se,maskt,maskf){
+  if ((maskt == TRUE) && (maskf == FALSE)){
+    joburl = paste0(settings$resturl,"slimfinder&consmask=","&seqin=","T",se)
+    result <- readLines(joburl,warn=FALSE) 
+  } else if ((maskt == FALSE) && (maskf == TRUE)){
+    joburl = paste0(settings$resturl,"slimfinder&consmask=","&seqin=","F",se)
+    result <- readLines(joburl,warn=FALSE)
+  } else{
+    joburl = paste0(settings$resturl,"slimfinder&seqin=",se)
+    result <- readLines(joburl,warn=FALSE)
+  }
   return(substr(result[96], 20,30)) 
 }
 
-### Return a JobID(Input: sequences) with REST output
-getUniprotID <- function(id){
-  joburl = paste0(settings$resturl,"slimfinder&uniprotid=",id)
-  result <- readLines(joburl,warn=FALSE) 
+### Return a JobID(Input: UniProtID) with REST output
+getUniprotID <- function(id,maskt,maskf){
+  if ((maskt == TRUE) && (maskf == FALSE)){
+    joburl = paste0(settings$resturl,"slimfinder&consmask=","&uniprotid","T",id)
+    result <- readLines(joburl,warn=FALSE) 
+  } else if ((maskt == FALSE) && (maskf == TRUE)){
+    joburl = paste0(settings$resturl,"slimfinder&consmask=","&uniprotid","F",id)
+    result <- readLines(joburl,warn=FALSE)
+  } else{
+    joburl = paste0(settings$resturl,"slimfinder&uniprotid=",id)
+    result <- readLines(joburl,warn=FALSE)
+  }
   return(substr(result[96], 20,30))
 }
 

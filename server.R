@@ -43,12 +43,18 @@ shinyServer(function(input, output, session) {
               file1 = input$file
               sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
               sequences = gsub("[\r\n\t]", "", sequences)
-              JobID(getSequences(sequences))
+              #i# check the mask module
+              maskf <- input$maskF
+              maskt <- input$maskT
+              JobID(getSequences(sequences,maskt,maskf))
             }
             #i# second, check UniprotID
           }else if(!is.null(input$uniprotid)){
+            #i# check the mask module
+            maskf <- input$maskF
+            maskt <- input$maskT
             #uniprotid <- list("",input$uniprotid)
-            JobID(getUniprotID(input$uniprotid))
+            JobID(getUniprotID(input$uniprotid,maskt,maskf))
             #i# Next, check Job for completion
           }else if(!(is.null(input$jobid))){
             if(isJobID(input$jobid) == FALSE){
@@ -62,7 +68,7 @@ shinyServer(function(input, output, session) {
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
           }
           incProgress(1/4)
-          Sys.sleep(0.5)
+          Sys.sleep(1.0)
           #i# Check the JobID
           jcheck = checkJob(JobID(),input$password)
           if(jcheck != TRUE){
@@ -70,9 +76,10 @@ shinyServer(function(input, output, session) {
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
           }
           incProgress(1/4)
+          Sys.sleep(1.0)
           adata$data$restkeys = c(getRestKeys(JobID(),input$password),settings$restkeys)
           incProgress(1/4)
-          Sys.sleep(0.5)
+          Sys.sleep(1.0)
         })  
         progx = length(adata$data$restkeys)
         withProgress(message="Retrieving data", value=0, {
