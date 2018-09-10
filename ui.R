@@ -25,8 +25,8 @@ shinyUI(fluidPage(
       fileInput("file", "REST Server FASTA file(maximum 30MB):", multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain",".csv")),
       textInput("uniprotid", "REST Server Uniprot ID:", settings$uniprotid),
       wellPanel("Please choose one:",
-      checkboxInput("maskF", "Disorder masking", value=FALSE),
-      checkboxInput("maskT", "Conservation masking", value=FALSE)
+      checkboxInput("dismask", "Disorder masking", value=FALSE),
+      checkboxInput("consmask", "Conservation masking", value=FALSE)
       ),
       textInput("jobid", "REST Server Job ID:", settings$jobid)
       ),

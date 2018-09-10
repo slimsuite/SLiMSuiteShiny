@@ -154,35 +154,29 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
     return(logdata) 
   }
 }
+### Check the masking options
+CheckMask <- function(dismask,consmask){
+  if (dismask == TRUE){joburl_d = paste0(settings$resturl,"slimfinder&dismask=","T")}
+  else{joburl_d = paste0(settings$resturl,"slimfinder&dismask=","F")}
+  if (consmask == TRUE){joburl_c = paste0(joburl_d,"&consmask=","T")}
+  else{joburl_c = paste0(joburl_d,"&consmask=","F")}
+  return(joburl_c)
+}
 
 ### Return a JobID(Input: sequences) with REST output
-getSequences <- function(se,maskt,maskf){
-  if ((maskt == TRUE) && (maskf == FALSE)){
-    joburl = paste0(settings$resturl,"slimfinder&consmask=","&seqin=","T",se)
-    result <- readLines(joburl,warn=FALSE) 
-  } else if ((maskt == FALSE) && (maskf == TRUE)){
-    joburl = paste0(settings$resturl,"slimfinder&consmask=","&seqin=","F",se)
-    result <- readLines(joburl,warn=FALSE)
-  } else{
-    joburl = paste0(settings$resturl,"slimfinder&seqin=",se)
-    result <- readLines(joburl,warn=FALSE)
-  }
+getSequences <- function(se,dismask,consmask){
+  maskoptions <- CheckMask(dismask,consmask)
+  joburl = paste0(maskoptions,"&seqin=",se)
+  result <- readLines(joburl,warn=FALSE)
   return(substr(result[96], 20,30)) 
 }
 
 ### Return a JobID(Input: UniProtID) with REST output
-getUniprotID <- function(id,maskt,maskf){
-  if ((maskt == TRUE) && (maskf == FALSE)){
-    joburl = paste0(settings$resturl,"slimfinder&consmask=","&uniprotid","T",id)
-    result <- readLines(joburl,warn=FALSE) 
-  } else if ((maskt == FALSE) && (maskf == TRUE)){
-    joburl = paste0(settings$resturl,"slimfinder&consmask=","&uniprotid","F",id)
-    result <- readLines(joburl,warn=FALSE)
-  } else{
-    joburl = paste0(settings$resturl,"slimfinder&uniprotid=",id)
-    result <- readLines(joburl,warn=FALSE)
-  }
-  return(substr(result[96], 20,30))
+getUniprotID <- function(id,dismask,consmask){
+  maskoptions <- CheckMask(dismask,consmask)
+  joburl = paste0(maskoptions,"&uniprotid=",id)
+  result <- readLines(joburl,warn=FALSE)
+  return(substr(result[96], 20,30)) 
 }
 
 ############### ::: UPDATE DATA ::: ##################
