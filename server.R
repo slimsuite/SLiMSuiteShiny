@@ -34,6 +34,7 @@ shinyServer(function(input, output, session) {
         withProgress(message="Checking JobID", value=0, {
           adata$data <- setupData()
           incProgress(1/4)
+          Sys.sleep(1.0)
           #i# First, check FASTA file
           if(!is.null(input$file)){
             if(!(isFile(input$file))){
@@ -43,18 +44,12 @@ shinyServer(function(input, output, session) {
               file1 = input$file
               sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
               sequences = gsub("[\r\n\t]", "", sequences)
-              #i# check the mask module
-              maskf <- input$maskF
-              maskt <- input$maskT
-              JobID(getSequences(sequences,maskt,maskf))
+              JobID(getSequences(sequences,input$dismask,input$consmask))
             }
             #i# second, check UniprotID
           }else if(!is.null(input$uniprotid)){
-            #i# check the mask module
-            maskf <- input$maskF
-            maskt <- input$maskT
             #uniprotid <- list("",input$uniprotid)
-            JobID(getUniprotID(input$uniprotid,maskt,maskf))
+            JobID(getUniprotID(input$uniprotid,input$dismask,input$consmask))
             #i# Next, check Job for completion
           }else if(!(is.null(input$jobid))){
             if(isJobID(input$jobid) == FALSE){
