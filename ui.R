@@ -22,8 +22,9 @@ shinyUI(fluidPage(
       # Set parameters for REST job retrieval
       wellPanel("Input a Job ID or a FASTA file or a Uniprot ID:",
       # Input: Select a file or upload a FASTA file----
-      fileInput("file", "REST Server FASTA file(maximum 30MB):", multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain",".csv")),
-      textInput("uniprotid", "REST Server Uniprot ID:", settings$uniprotid),
+      fileInput("file", "REST Server FASTA file(maximum 30MB):", multiple = FALSE),
+      # , accept = c("text/csv", "text/comma-separated-values,text/plain",".csv")
+      textInput("uniprotid", "REST Server Uniprot ID:",value=NULL, placeholder = NULL),
       wellPanel("Please choose one:",
       checkboxInput("dismask", "Disorder masking", value=FALSE),
       checkboxInput("consmask", "Conservation masking", value=FALSE)
