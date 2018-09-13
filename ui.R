@@ -5,6 +5,7 @@ source("main.R")
 ############### ::: USER INTERFACE ::: ##################
 # Define the UI.
 shinyUI(fluidPage(
+  useShinyjs(),
   #>>># This code block should be copied to the standalone app ui code when changed #>>>#
   # Application title.
   titlePanel(info$apptitle),

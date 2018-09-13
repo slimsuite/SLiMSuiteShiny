@@ -45,6 +45,7 @@ shinyServer(function(input, output, session) {
               sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
               sequences = gsub("[\r\n\t]", "", sequences)
               JobID(getSequences(sequences,input$dismask,input$consmask))
+              reset("file")
             }
             #i# second, check UniprotID
           }else if((!is.null(input$uniprotid)) && (input$uniprotid!='')){
