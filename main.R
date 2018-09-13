@@ -57,7 +57,7 @@ load_or_install = function(package_names)
   } 
 }
 # Load or install required libraries
-load_or_install(c("shiny", "httr", "DT", "markdown","plyr","tools"))
+load_or_install(c("shiny", "httr", "DT", "markdown","plyr","tools","shinyjs"))
 
 ############### ::: SET DEFAULTS ::: ##################
 settings = list(
