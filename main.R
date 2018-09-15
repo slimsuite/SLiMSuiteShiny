@@ -93,7 +93,7 @@ setupData = function(){
       emptydb[[rkey]] = ""
     }
   }
-  emptydb$intro = "Enter valid JobID and click 'Retrieve Job'."
+  emptydb$intro = "Enter valid JobID and click 'Retrieve Job'. Please refresh browser to upload different types of data"
   # Return data list
   return(emptydb)
 }

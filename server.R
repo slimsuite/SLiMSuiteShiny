@@ -18,7 +18,7 @@ shinyServer(function(input, output, session) {
   JobID <- reactiveVal(value = settings$jobid, label = NULL)
   #i# Get the interactive values when buttons are triggered
   input_job <- eventReactive(input$retrieve,{input$jobid},ignoreNULL=FALSE)
-  input_file <- eventReactive(input$upload, {input$file},ignoreNULL=FALSE)
+  input_file <- eventReactive(input$upload, {input$file1},ignoreNULL=FALSE)
   input_id <- eventReactive(input$upload,{input$uniprotid},ignoreNULL=FALSE)
   input_disorder <- eventReactive(input$upload,{input$dismask},ignoreNULL=FALSE)
   input_conservation <- eventReactive(input$upload,{input$consmask},ignoreNULL=FALSE)
@@ -90,7 +90,8 @@ shinyServer(function(input, output, session) {
     return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
     })
   })
-    
+  
+  
   observeEvent(input$upload,{output$status <- renderText({   
     # When upload button triggered, process the uploaded data
       isolate({
@@ -107,8 +108,8 @@ shinyServer(function(input, output, session) {
               sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
               sequences = gsub("[\r\n\t]", "", sequences)
               JobID(getSequences(sequences,input_disorder(),input_conservation()))
-              shinyjs::reset("file")
-              file1 = ""
+              session$sendCustomMessage(type = "resetFileInputHandler", "file1")
+              shinyjs::reset("file1")
             }
             #i# second, check UniprotID
           }else if((!is.null(input_id())) && (input_id()!='')){
@@ -155,9 +156,10 @@ shinyServer(function(input, output, session) {
           )
         })
       })
-    return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+    return(paste(as.character(adata$data$status),sep="\n","JobID:",JobID(),collapse="\n"))
   })
   })
+  
 
   
   #i# Additional text output reporting what is in the Results tab

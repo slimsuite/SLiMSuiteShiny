@@ -23,8 +23,16 @@ shinyUI(fluidPage(
       # Upload data to the SlimFind server  
       tabPanel("Upload Data",
       # Input: Select a file or upload a FASTA file----
-      fileInput("file", "Please upload a file(maximum 30MB):", multiple = FALSE),
+      fileInput("file1", "Please upload a file(maximum 30MB):", multiple = FALSE),
       # , accept = c("text/csv", "text/comma-separated-values,text/plain",".csv")
+      tags$script('
+        Shiny.addCustomMessageHandler("resetFileInputHandler", function(x) {   
+          var el = $("#" + x);
+          el.css("width", "0%");
+          var id = "#" + x + "_progress";     
+          $(id).css("visibility", "hidden");
+        });
+      '),
       textInput("uniprotid", "REST Server Uniprot ID:",value=NULL, placeholder = NULL),
       wellPanel("Please choose masking options:",
       checkboxInput("dismask", "Disorder masking", value=FALSE),
