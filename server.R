@@ -111,6 +111,92 @@ shinyServer(function(input, output, session) {
       return(HTML(myhtml))
     }
   })
+
+  output$status <- renderText({
+    input$upload
+    if(input$upload > 0){
+      isolate({
+        withProgress(message="Checking JobID", value=0, {
+          adata$data <- setupData()
+          incProgress(1/4)
+          #i# First, check FASTA file
+          if(!is.null(input$file)){
+            if(!(isFile(input$file))){
+              adata$data$status = paste("ERROR:",input$file,"is an invalid path.")
+              return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+            }else{
+              file1 = input$file
+              sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
+              sequences = gsub("[\r\n\t]", "", sequences)
+              JobID(getSequences(sequences,input$dismask,input$consmask))
+            }
+            #i# second, check UniprotID
+          }else if((!is.null(input$uniprotid)) && (input$uniprotid!='')){
+            #uniprotid <- list("",input$uniprotid)
+            JobID(getUniprotID(input$uniprotid,input$dismask,input$consmask))
+            #i# Next, check Job for completion
+          }else if(!(is.null(input$jobid))){
+            if(isJobID(input$jobid) == FALSE){
+              adata$data$status = paste("ERROR:",input$jobid,"is an invalid JobID.")
+              return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+            }else{
+              JobID(input$jobid)
+            }
+          }else{
+            adata$data$status = paste("ERROR: invalid Input.")
+            return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+          }
+          incProgress(1/4)
+          #i# Check the JobID
+          jcheck = checkJob(JobID(),input$password)
+          if(jcheck != TRUE){
+            adata$data$status = jcheck
+            return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+          }
+          incProgress(1/4)
+          adata$data$restkeys = c(getRestKeys(JobID(),input$password),settings$restkeys)
+          incProgress(1/4)
+        })  
+        progx = length(adata$data$restkeys)
+        withProgress(message="Retrieving data", value=0, {
+          for(ikey in adata$data$restkeys){
+            adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)
+            incProgress(1/progx)
+          }
+          updateSelectInput(session, "prog",
+                            label = "SLiMSuite REST program::",
+                            choices = c(adata$data$prog,"None"),
+                            selected = adata$data$prog
+          )
+          rkeys = c()
+          for(rkey in names(adata$data)){
+            if(!rkey %in% settings$stdkeys){
+              rkeys = c(rkeys,rkey)
+            }
+          }
+          updateSelectInput(session, "restout",
+                            label = "REST Output to retrieve:",
+                            #choices = adata$data$restkeys,
+                            #choices = names(adata$data),
+                            choices = rkeys,
+                            selected = "restkeys"
+          )
+        })
+      })
+    }
+    return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+  })
+  #i# Additional text output reporting what is in the Results tab
+  output$resultsChoice <- renderUI({
+    if(input$retrieve > 0){
+      updateSelectInput(session, "restformat",
+                        selected = getRestFormat(input$restout,pure=FALSE)
+      )
+      myhtml = paste0("<p>Selected output in <b>Results</b> tab: <code>",input$restout,"</code></p>")
+      return(HTML(myhtml))
+    }
+  })
+  
   
   ### SECTION 3 - Output tabs: data rendering
   ### Standard Server Outputs
