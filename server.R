@@ -16,7 +16,12 @@ shinyServer(function(input, output, session) {
   
   #i# JobID to register the jobid in program (UniProt -> JobID; Sequences -> JobID; JobID)
   JobID <- reactiveVal(value = settings$jobid, label = NULL)
-  
+  #i# Get the interactive values when buttons are triggered
+  input_job <- eventReactive(input$retrieve,{input$jobid},ignoreNULL=FALSE)
+  input_file <- eventReactive(input$upload, {input$file},ignoreNULL=FALSE)
+  input_id <- eventReactive(input$upload,{input$uniprotid},ignoreNULL=FALSE)
+  input_disorder <- eventReactive(input$upload,{input$dismask},ignoreNULL=FALSE)
+  input_conservation <- eventReactive(input$upload,{input$consmask},ignoreNULL=FALSE)
   #i# Check whether a jobID looks legit and return True or False
   # isJobID <- function(jobid){
   #i# Check whether Job has run
@@ -25,23 +30,21 @@ shinyServer(function(input, output, session) {
   # getRestKeys <- function(jobid,password=""){
   #i# Return an R object with REST output
   # getRestOutput <- function(jobid,rest,outfmt="text",password=""){
-    
   ### SECTION 2 - Status panel: response to Buttons
-  output$status <- renderText({
-    (input$retrieve)||(input$upload)
+  observeEvent(input$retrieve,{output$status <- renderText({
+    #(input$upload)||(input$retrieve)
     # process retrieve job
-    if(input$retrieve > 0){
       isolate({
         withProgress(message="Checking JobID", value=0, {
           adata$data <- setupData()
           incProgress(1/4)
           #i# First, check FASTA file
-          if(!(is.null(input$jobid))){
-            if(isJobID(input$jobid) == FALSE){
-            adata$data$status = paste("ERROR:",input$jobid,"is an invalid JobID.")
+          if(!(is.null(input_job()))){
+            if(isJobID(input_job()) == FALSE){
+            adata$data$status = paste("ERROR:",input_job(),"is an invalid JobID.")
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
             }else{
-              JobID(input$jobid)
+              JobID(input_job())
             }
           }else{
             adata$data$status = paste("ERROR: invalid Input.")
@@ -84,28 +87,33 @@ shinyServer(function(input, output, session) {
           )
         })
       })
-    }
-    if(input$upload>0){
+    return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+    })
+  })
+    
+  observeEvent(input$upload,{output$status <- renderText({   
+    # When upload button triggered, process the uploaded data
       isolate({
         withProgress(message="Checking Upload Data", value=0, {
           #adata$data <- setupData()
           incProgress(1/4)
           #i# First, check FASTA file
-          if(!is.null(input$file)){
-            if(!(isFile(input$file))){
-              adata$data$status = paste("ERROR:",input$file,"is an invalid path.")
+          if(!is.null(input_file())){
+            if(!(isFile(input_file()))){
+              adata$data$status = paste("ERROR:",input_file(),"is an invalid path.")
               return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
             }else{
-              file1 = input$file
+              file1 = input_file()
               sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
               sequences = gsub("[\r\n\t]", "", sequences)
-              JobID(getSequences(sequences,input$dismask,input$consmask))
+              JobID(getSequences(sequences,input_disorder(),input_conservation()))
               shinyjs::reset("file")
+              file1 = ""
             }
             #i# second, check UniprotID
-          }else if((!is.null(input$uniprotid)) && (input$uniprotid!='')){
+          }else if((!is.null(input_id())) && (input_id()!='')){
             #uniprotid <- list("",input$uniprotid)
-            JobID(getUniprotID(input$uniprotid,input$dismask,input$consmask))
+            JobID(getUniprotID(input_id(),input_disorder(),input_conservation()))
           }else{
             adata$data$status = paste("ERROR: invalid Input.")
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
@@ -147,9 +155,11 @@ shinyServer(function(input, output, session) {
           )
         })
       })
-    }
     return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
   })
+  })
+
+  
   #i# Additional text output reporting what is in the Results tab
   # maybe should add input$upload > 0
   output$resultsChoice <- renderUI({

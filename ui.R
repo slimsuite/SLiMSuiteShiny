@@ -39,7 +39,7 @@ shinyUI(fluidPage(
       #i# Would be better to change to select an output style
       selectInput("prog", "SLiMSuite REST program:", c("None"),selected="None"),
       # Set parameters for REST job retrieval
-      textInput("jobid", "REST Server Job ID:", settings$jobid),
+      textInput("jobid", "REST Server Job ID:", settings$jobid), # 
       textInput("password", "Job Password [Optional]:", ""),
       selectInput("restout", "REST Output to retrieve:", c("status"), "status"),
       #X#textInput("restout", "REST Output to retrieve:", "status"),
