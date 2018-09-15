@@ -16,7 +16,12 @@ shinyServer(function(input, output, session) {
   
   #i# JobID to register the jobid in program (UniProt -> JobID; Sequences -> JobID; JobID)
   JobID <- reactiveVal(value = settings$jobid, label = NULL)
-  
+  #i# Get the interactive values when buttons are triggered
+  input_job <- eventReactive(input$retrieve,{input$jobid},ignoreNULL=FALSE)
+  input_file <- eventReactive(input$upload, {input$file1},ignoreNULL=FALSE)
+  input_id <- eventReactive(input$upload,{input$uniprotid},ignoreNULL=FALSE)
+  input_disorder <- eventReactive(input$upload,{input$dismask},ignoreNULL=FALSE)
+  input_conservation <- eventReactive(input$upload,{input$consmask},ignoreNULL=FALSE)
   #i# Check whether a jobID looks legit and return True or False
   # isJobID <- function(jobid){
   #i# Check whether Job has run
@@ -25,46 +30,27 @@ shinyServer(function(input, output, session) {
   # getRestKeys <- function(jobid,password=""){
   #i# Return an R object with REST output
   # getRestOutput <- function(jobid,rest,outfmt="text",password=""){
-    
-  ### SECTION 2 - Status panel: response to Retrieve Button
-  output$status <- renderText({
-    input$retrieve
-    if(input$retrieve > 0){
+  ### SECTION 2 - Status panel: response to Buttons
+  observeEvent(input$retrieve,{output$status <- renderText({
+    #(input$upload)||(input$retrieve)
+    # process retrieve job
       isolate({
         withProgress(message="Checking JobID", value=0, {
           adata$data <- setupData()
           incProgress(1/4)
-          Sys.sleep(1.0)
           #i# First, check FASTA file
-          if(!is.null(input$file)){
-            if(!(isFile(input$file))){
-              adata$data$status = paste("ERROR:",input$file,"is an invalid path.")
-              return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
-            }else{
-              file1 = input$file
-              sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
-              sequences = gsub("[\r\n\t]", "", sequences)
-              JobID(getSequences(sequences,input$dismask,input$consmask))
-              reset("file")
-            }
-            #i# second, check UniprotID
-          }else if((!is.null(input$uniprotid)) && (input$uniprotid!='')){
-            #uniprotid <- list("",input$uniprotid)
-            JobID(getUniprotID(input$uniprotid,input$dismask,input$consmask))
-            #i# Next, check Job for completion
-          }else if(!(is.null(input$jobid))){
-            if(isJobID(input$jobid) == FALSE){
-            adata$data$status = paste("ERROR:",input$jobid,"is an invalid JobID.")
+          if(!(is.null(input_job()))){
+            if(isJobID(input_job()) == FALSE){
+            adata$data$status = paste("ERROR:",input_job(),"is an invalid JobID.")
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
             }else{
-              JobID(input$jobid)
+              JobID(input_job())
             }
           }else{
             adata$data$status = paste("ERROR: invalid Input.")
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
           }
           incProgress(1/4)
-          Sys.sleep(1.0)
           #i# Check the JobID
           jcheck = checkJob(JobID(),input$password)
           if(jcheck != TRUE){
@@ -72,10 +58,8 @@ shinyServer(function(input, output, session) {
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
           }
           incProgress(1/4)
-          Sys.sleep(1.0)
           adata$data$restkeys = c(getRestKeys(JobID(),input$password),settings$restkeys)
           incProgress(1/4)
-          Sys.sleep(1.0)
         })  
         progx = length(adata$data$restkeys)
         withProgress(message="Retrieving data", value=0, {
@@ -103,12 +87,85 @@ shinyServer(function(input, output, session) {
           )
         })
       })
-    }
     return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+    })
   })
+  
+  
+  observeEvent(input$upload,{output$status <- renderText({   
+    # When upload button triggered, process the uploaded data
+      isolate({
+        withProgress(message="Checking Upload Data", value=0, {
+          #adata$data <- setupData()
+          incProgress(1/4)
+          #i# First, check FASTA file
+          if(!is.null(input_file())){
+            if(!(isFile(input_file()))){
+              adata$data$status = paste("ERROR:",input_file(),"is an invalid path.")
+              return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+            }else{
+              file1 = input_file()
+              sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
+              sequences = gsub("[\r\n\t]", "", sequences)
+              JobID(getSequences(sequences,input_disorder(),input_conservation()))
+              session$sendCustomMessage(type = "resetFileInputHandler", "file1")
+              shinyjs::reset("file1")
+            }
+            #i# second, check UniprotID
+          }else if((!is.null(input_id())) && (input_id()!='')){
+            #uniprotid <- list("",input$uniprotid)
+            JobID(getUniprotID(input_id(),input_disorder(),input_conservation()))
+          }else{
+            adata$data$status = paste("ERROR: invalid Input.")
+            return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+          }
+          incProgress(1/4)
+          #i# Check the JobID
+          jcheck = checkJob(JobID(),input$password)
+          if(jcheck != TRUE){
+            adata$data$status = jcheck
+            return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+          }
+          incProgress(1/4)
+          adata$data$restkeys = c(getRestKeys(JobID(),input$password),settings$restkeys)
+          incProgress(1/4)
+        })  
+        progx = length(adata$data$restkeys)
+        withProgress(message="Retrieving data", value=0, {
+          for(ikey in adata$data$restkeys){
+            adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)
+            incProgress(1/progx)
+          }
+          updateSelectInput(session, "prog",
+                            label = "SLiMSuite REST program::",
+                            choices = c(adata$data$prog,"None"),
+                            selected = adata$data$prog
+          )
+          rkeys = c()
+          for(rkey in names(adata$data)){
+            if(!rkey %in% settings$stdkeys){
+              rkeys = c(rkeys,rkey)
+            }
+          }
+          updateSelectInput(session, "restout",
+                            label = "REST Output to retrieve:",
+                            #choices = adata$data$restkeys,
+                            #choices = names(adata$data),
+                            choices = rkeys,
+                            selected = "restkeys"
+          )
+        })
+      })
+    return(paste(as.character(adata$data$status),sep="\n","JobID:",JobID(),collapse="\n"))
+  })
+  })
+  
+
+  
   #i# Additional text output reporting what is in the Results tab
+  # maybe should add input$upload > 0
   output$resultsChoice <- renderUI({
-    if(input$retrieve > 0){
+    if(input$retrieve > 0 ){
       updateSelectInput(session, "restformat",
                         selected = getRestFormat(input$restout,pure=FALSE)
       )
@@ -116,6 +173,8 @@ shinyServer(function(input, output, session) {
       return(HTML(myhtml))
     }
   })
+
+  
   
   ### SECTION 3 - Output tabs: data rendering
   ### Standard Server Outputs

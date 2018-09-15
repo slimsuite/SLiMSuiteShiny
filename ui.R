@@ -17,21 +17,37 @@ shinyUI(fluidPage(
       # Description markdown file
       #i# Can include static MD like this: #includeMarkdown("summary.md"),
       htmlOutput("summary"),
+
+      tabsetPanel(
+      
+      # Upload data to the SlimFind server  
+      tabPanel("Upload Data",
+      # Input: Select a file or upload a FASTA file----
+      fileInput("file1", "Please upload a file(maximum 30MB):", multiple = FALSE),
+      # , accept = c("text/csv", "text/comma-separated-values,text/plain",".csv")
+      tags$script('
+        Shiny.addCustomMessageHandler("resetFileInputHandler", function(x) {   
+          var el = $("#" + x);
+          el.css("width", "0%");
+          var id = "#" + x + "_progress";     
+          $(id).css("visibility", "hidden");
+        });
+      '),
+      textInput("uniprotid", "REST Server Uniprot ID:",value=NULL, placeholder = NULL),
+      wellPanel("Please choose masking options:",
+      checkboxInput("dismask", "Disorder masking", value=FALSE),
+      checkboxInput("consmask", "Conservation masking", value=FALSE)
+      ),
+      actionButton("upload", "Upload Data")
+      ),
+      
+      # Retrieve the output from Slimfind server using jobid
+      tabPanel("Retrieve Job",
       #i# This program selection is used experimentally to control output. It might be possible to remove.
       #i# Would be better to change to select an output style
       selectInput("prog", "SLiMSuite REST program:", c("None"),selected="None"),
       # Set parameters for REST job retrieval
-      wellPanel("Input a Job ID or a FASTA file or a Uniprot ID:",
-      # Input: Select a file or upload a FASTA file----
-      fileInput("file", "REST Server FASTA file(maximum 30MB):", multiple = FALSE),
-      # , accept = c("text/csv", "text/comma-separated-values,text/plain",".csv")
-      textInput("uniprotid", "REST Server Uniprot ID:",value=NULL, placeholder = NULL),
-      wellPanel("Please choose one:",
-      checkboxInput("dismask", "Disorder masking", value=FALSE),
-      checkboxInput("consmask", "Conservation masking", value=FALSE)
-      ),
-      textInput("jobid", "REST Server Job ID:", settings$jobid)
-      ),
+      textInput("jobid", "REST Server Job ID:", settings$jobid), # 
       textInput("password", "Job Password [Optional]:", ""),
       selectInput("restout", "REST Output to retrieve:", c("status"), "status"),
       #X#textInput("restout", "REST Output to retrieve:", "status"),
@@ -45,7 +61,8 @@ shinyUI(fluidPage(
       checkboxInput("showini", "Show INI file content (Run tab)", value=FALSE),
       checkboxInput("showout", "Show REST output keys (Run tab)", value=TRUE),
       checkboxInput("showdesc", "Show server description", value=FALSE),
-      checkboxInput("showinfo", "Show explanation of server output", value=TRUE),
+      checkboxInput("showinfo", "Show explanation of server output", value=TRUE)
+      )),
       
       # HTML content to include at end. Contains version number.
       htmlOutput("footer")
