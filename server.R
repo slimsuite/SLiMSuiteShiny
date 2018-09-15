@@ -28,29 +28,15 @@ shinyServer(function(input, output, session) {
     
   ### SECTION 2 - Status panel: response to Buttons
   output$status <- renderText({
-    input$retrieve
+    (input$retrieve)||(input$upload)
+    # process retrieve job
     if(input$retrieve > 0){
       isolate({
         withProgress(message="Checking JobID", value=0, {
           adata$data <- setupData()
           incProgress(1/4)
           #i# First, check FASTA file
-          if(!is.null(input$file)){
-            if(!(isFile(input$file))){
-              adata$data$status = paste("ERROR:",input$file,"is an invalid path.")
-              return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
-            }else{
-              file1 = input$file
-              sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
-              sequences = gsub("[\r\n\t]", "", sequences)
-              JobID(getSequences(sequences,input$dismask,input$consmask))
-            }
-            #i# second, check UniprotID
-          }else if((!is.null(input$uniprotid)) && (input$uniprotid!='')){
-            #uniprotid <- list("",input$uniprotid)
-            JobID(getUniprotID(input$uniprotid,input$dismask,input$consmask))
-            #i# Next, check Job for completion
-          }else if(!(is.null(input$jobid))){
+          if(!(is.null(input$jobid))){
             if(isJobID(input$jobid) == FALSE){
             adata$data$status = paste("ERROR:",input$jobid,"is an invalid JobID.")
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
@@ -99,25 +85,10 @@ shinyServer(function(input, output, session) {
         })
       })
     }
-    return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
-  })
-  #i# Additional text output reporting what is in the Results tab
-  output$resultsChoice <- renderUI({
-    if(input$retrieve > 0){
-      updateSelectInput(session, "restformat",
-                        selected = getRestFormat(input$restout,pure=FALSE)
-      )
-      myhtml = paste0("<p>Selected output in <b>Results</b> tab: <code>",input$restout,"</code></p>")
-      return(HTML(myhtml))
-    }
-  })
-
-  output$status <- renderText({
-    input$upload
-    if(input$upload > 0){
+    if(input$upload>0){
       isolate({
-        withProgress(message="Checking JobID", value=0, {
-          adata$data <- setupData()
+        withProgress(message="Checking Upload Data", value=0, {
+          #adata$data <- setupData()
           incProgress(1/4)
           #i# First, check FASTA file
           if(!is.null(input$file)){
@@ -134,14 +105,6 @@ shinyServer(function(input, output, session) {
           }else if((!is.null(input$uniprotid)) && (input$uniprotid!='')){
             #uniprotid <- list("",input$uniprotid)
             JobID(getUniprotID(input$uniprotid,input$dismask,input$consmask))
-            #i# Next, check Job for completion
-          }else if(!(is.null(input$jobid))){
-            if(isJobID(input$jobid) == FALSE){
-              adata$data$status = paste("ERROR:",input$jobid,"is an invalid JobID.")
-              return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
-            }else{
-              JobID(input$jobid)
-            }
           }else{
             adata$data$status = paste("ERROR: invalid Input.")
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
@@ -187,8 +150,9 @@ shinyServer(function(input, output, session) {
     return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
   })
   #i# Additional text output reporting what is in the Results tab
+  # maybe should add input$upload > 0
   output$resultsChoice <- renderUI({
-    if(input$retrieve > 0){
+    if(input$retrieve > 0 ){
       updateSelectInput(session, "restformat",
                         selected = getRestFormat(input$restout,pure=FALSE)
       )
@@ -196,6 +160,7 @@ shinyServer(function(input, output, session) {
       return(HTML(myhtml))
     }
   })
+
   
   
   ### SECTION 3 - Output tabs: data rendering
