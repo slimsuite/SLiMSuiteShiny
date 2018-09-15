@@ -26,7 +26,7 @@ shinyServer(function(input, output, session) {
   #i# Return an R object with REST output
   # getRestOutput <- function(jobid,rest,outfmt="text",password=""){
     
-  ### SECTION 2 - Status panel: response to Retrieve Button
+  ### SECTION 2 - Status panel: response to Buttons
   output$status <- renderText({
     input$retrieve
     if(input$retrieve > 0){
@@ -34,7 +34,6 @@ shinyServer(function(input, output, session) {
         withProgress(message="Checking JobID", value=0, {
           adata$data <- setupData()
           incProgress(1/4)
-          Sys.sleep(1.0)
           #i# First, check FASTA file
           if(!is.null(input$file)){
             if(!(isFile(input$file))){
@@ -45,7 +44,6 @@ shinyServer(function(input, output, session) {
               sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
               sequences = gsub("[\r\n\t]", "", sequences)
               JobID(getSequences(sequences,input$dismask,input$consmask))
-              reset("file")
             }
             #i# second, check UniprotID
           }else if((!is.null(input$uniprotid)) && (input$uniprotid!='')){
@@ -64,7 +62,6 @@ shinyServer(function(input, output, session) {
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
           }
           incProgress(1/4)
-          Sys.sleep(1.0)
           #i# Check the JobID
           jcheck = checkJob(JobID(),input$password)
           if(jcheck != TRUE){
@@ -72,10 +69,8 @@ shinyServer(function(input, output, session) {
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
           }
           incProgress(1/4)
-          Sys.sleep(1.0)
           adata$data$restkeys = c(getRestKeys(JobID(),input$password),settings$restkeys)
           incProgress(1/4)
-          Sys.sleep(1.0)
         })  
         progx = length(adata$data$restkeys)
         withProgress(message="Retrieving data", value=0, {

@@ -29,7 +29,8 @@ shinyUI(fluidPage(
       wellPanel("Please choose masking options:",
       checkboxInput("dismask", "Disorder masking", value=FALSE),
       checkboxInput("consmask", "Conservation masking", value=FALSE)
-      )
+      ),
+      actionButton("upload", "Upload Data")
       ),
       
       # Retrieve the output from Slimfind server using jobid
