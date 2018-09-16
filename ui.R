@@ -5,7 +5,7 @@ source("main.R")
 ############### ::: USER INTERFACE ::: ##################
 # Define the UI.
 shinyUI(fluidPage(
-  useShinyjs(),
+  #useShinyjs(),
   #>>># This code block should be copied to the standalone app ui code when changed #>>>#
   # Application title.
   titlePanel(info$apptitle),
@@ -36,7 +36,9 @@ shinyUI(fluidPage(
       textInput("uniprotid", "REST Server Uniprot ID:",value=NULL, placeholder = NULL),
       wellPanel("Please choose masking options:",
       checkboxInput("dismask", "Disorder masking", value=FALSE),
-      checkboxInput("consmask", "Conservation masking", value=FALSE)
+      checkboxInput("consmask", "Conservation masking", value=FALSE),
+      selectizeInput("ftmask", "UniProt features to mask out", c("None"), selected = NULL, multiple = FALSE),
+      selectizeInput("imask", "UniProt features to inversely mask (Sequence MUST have 1+ features)", c("None"), selected = NULL, multiple = FALSE)
       ),
       actionButton("upload", "Upload Data")
       ),
@@ -47,7 +49,7 @@ shinyUI(fluidPage(
       #i# Would be better to change to select an output style
       selectInput("prog", "SLiMSuite REST program:", c("None"),selected="None"),
       # Set parameters for REST job retrieval
-      textInput("jobid", "REST Server Job ID:", settings$jobid), # 
+      textInput("jobid", "REST Server Job ID:", settings$jobid), 
       textInput("password", "Job Password [Optional]:", ""),
       selectInput("restout", "REST Output to retrieve:", c("status"), "status"),
       #X#textInput("restout", "REST Output to retrieve:", "status"),

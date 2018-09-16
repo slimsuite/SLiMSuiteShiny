@@ -93,7 +93,7 @@ setupData = function(){
       emptydb[[rkey]] = ""
     }
   }
-  emptydb$intro = "Enter valid JobID and click 'Retrieve Job'. Please refresh browser to upload different types of data"
+  emptydb$intro = "Enter valid JobID and click 'Retrieve Job'."
   # Return data list
   return(emptydb)
 }
@@ -155,25 +155,36 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
   }
 }
 ### Check the masking options
-CheckMask <- function(dismask,consmask){
+# http://rest.slimsuite.unsw.edu.au/docs&page=module:qslimfinder
+CheckMask <- function(dismask,consmask,ftmask,imask){
   if (dismask == TRUE){joburl_d = paste0(settings$resturl,"slimfinder&dismask=","T")}
   else{joburl_d = paste0(settings$resturl,"slimfinder&dismask=","F")}
+  
   if (consmask == TRUE){joburl_c = paste0(joburl_d,"&consmask=","T")}
   else{joburl_c = paste0(joburl_d,"&consmask=","F")}
-  return(joburl_c)
+  
+  if (ftmask == "EM"){joburl_f = paste0(joburl_c,"&ftmask=","EM")}
+  else if (ftmask=="DOMAIN"){joburl_f = paste0(joburl_c,"&ftmask=","DOMAIN")}
+  else if (ftmask=="TRANSMEM") {joburl_f = paste0(joburl_c,"&ftmask=","TRANSMEM")}
+  else{joburl_f =  paste0(joburl_c,"&ftmask=","")}
+  
+  if (imask == "inclusively"){joburl_i = paste0(joburl_f,"&imask=","inclusively")}
+  else {joburl_i = paste0(joburl_f,"&imask=","")}
+  
+  return(joburl_i)
 }
 
 ### Return a JobID(Input: sequences) with REST output
-getSequences <- function(se,dismask,consmask){
-  maskoptions <- CheckMask(dismask,consmask)
+getSequences <- function(se,dismask,consmask,ftmask,imask){
+  maskoptions <- CheckMask(dismask,consmask,ftmask,imask)
   joburl = paste0(maskoptions,"&seqin=",se)
   result <- readLines(joburl,warn=FALSE)
   return(substr(result[96], 20,30)) 
 }
 
 ### Return a JobID(Input: UniProtID) with REST output
-getUniprotID <- function(id,dismask,consmask){
-  maskoptions <- CheckMask(dismask,consmask)
+getUniprotID <- function(id,dismask,consmask,ftmask,imask){
+  maskoptions <- CheckMask(dismask,consmask,ftmask,imask)
   joburl = paste0(maskoptions,"&uniprotid=",id)
   result <- readLines(joburl,warn=FALSE)
   return(substr(result[96], 20,30)) 
