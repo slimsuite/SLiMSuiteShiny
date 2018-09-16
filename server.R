@@ -19,9 +19,18 @@ shinyServer(function(input, output, session) {
   #i# Get the interactive values when buttons are triggered
   input_job <- eventReactive(input$retrieve,{input$jobid},ignoreNULL=FALSE)
   input_file <- eventReactive(input$upload, {input$file1},ignoreNULL=FALSE)
+  # masking options
   input_id <- eventReactive(input$upload,{input$uniprotid},ignoreNULL=FALSE)
   input_disorder <- eventReactive(input$upload,{input$dismask},ignoreNULL=FALSE)
   input_conservation <- eventReactive(input$upload,{input$consmask},ignoreNULL=FALSE)
+  
+  updateSelectizeInput(session, 'ftmask', choices = c("None","EM","DOMAIN","TRANSMEM"), server = TRUE)
+  input_ft <- eventReactive(input$upload,{input$ftmask},ignoreNULL=FALSE)
+  
+  updateSelectizeInput(session, 'imask', choices = c("None","inclusively"), server = TRUE)
+  input_i <- eventReactive(input$upload,{input$imask},ignoreNULL=FALSE)
+  
+  #input_ft <- renderText(input$ftmask)
   #i# Check whether a jobID looks legit and return True or False
   # isJobID <- function(jobid){
   #i# Check whether Job has run
@@ -107,14 +116,14 @@ shinyServer(function(input, output, session) {
               file1 = input_file()
               sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
               sequences = gsub("[\r\n\t]", "", sequences)
-              JobID(getSequences(sequences,input_disorder(),input_conservation()))
+              JobID(getSequences(sequences,input_disorder(),input_conservation(),input_ft(),input_i()))
               session$sendCustomMessage(type = "resetFileInputHandler", "file1")
-              shinyjs::reset("file1")
+              #shinyjs::reset("file1")
             }
             #i# second, check UniprotID
           }else if((!is.null(input_id())) && (input_id()!='')){
             #uniprotid <- list("",input$uniprotid)
-            JobID(getUniprotID(input_id(),input_disorder(),input_conservation()))
+            JobID(getUniprotID(input_id(),input_disorder(),input_conservation(),input_ft(),input_i()))
           }else{
             adata$data$status = paste("ERROR: invalid Input.")
             return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
@@ -161,9 +170,8 @@ shinyServer(function(input, output, session) {
   })
   
 
-  
   #i# Additional text output reporting what is in the Results tab
-  # maybe should add input$upload > 0
+  # maybe should add input$upload > 0 ?
   output$resultsChoice <- renderUI({
     if(input$retrieve > 0 ){
       updateSelectInput(session, "restformat",
