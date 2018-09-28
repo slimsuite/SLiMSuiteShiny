@@ -68,11 +68,11 @@ settings = list(
   #i# Standard REST server &rest keys
   stdkeys = c("status", "version", "ini", "log", "warnings", "errors", "outfmt", "help", "jobid", "intro", "prog"),
   #i# Subset of REST server keys that are not returned by restKeys()
-  restkeys = c("errors", "outfmt", "help", "intro", "prog"),
+  restkeys = c("errors", "outfmt", "help", "intro", "prog", "compare"),
   #i# Define REST output formats
   outfmts = c("none","text","csv","tsv","log"),
   csv = c("main","occ"),
-  tsv = c(),
+  tsv = c("compare",""),
   #i# Whether to run in debugging mode
   debug = TRUE,
   #i# Default program
@@ -107,6 +107,7 @@ isJobID <- function(jobid){
   if(is.na(as.integer(substr(jobid,7,11)))){ return(FALSE) }
   return(TRUE)
 }
+
 ### Check whether a file exists and return True or False
 isFile <- function(FASTA){
   if(length(FASTA)==0){return(FALSE)}
@@ -123,7 +124,7 @@ checkJob <- function(jobid,password=""){
 } 
 ### Function for returning the REST keys
 getRestKeys <- function(jobid,password=""){
-  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=",password,"&rest=restkeys")
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&rest=restkeys")
   return(readLines(joburl,warn=FALSE))
 }
 ### Return the REST output format
@@ -138,13 +139,15 @@ getRestFormat <- function(rest,pure=TRUE){
 }
 ### Return an R object with REST output
 getRestOutput <- function(jobid,rest,outfmt="",password=""){
-  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=",password,"&rest=",rest)
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&rest=",rest)
   if(outfmt == ""){
     outfmt = getRestFormat(rest)
   }
   if(outfmt == "text"){ return(readLines(joburl,warn=FALSE)) }
-  if(outfmt == "csv"){ return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)) }
-  if(outfmt == "tsv"){ return(read.delim(joburl,header=TRUE,sep="\t",stringsAsFactors=FALSE)) }
+  if(outfmt == "csv"){ return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))}
+  if(outfmt == "tsv"){ 
+    #joburl = paste0(settings$resturl,"retrieve&jobid=","18092800018","&rest=",rest)
+    return(read.delim(joburl,header=TRUE,sep="\t",stringsAsFactors=FALSE)) }
   if(outfmt == "log"){ 
     logdata = read.delim(joburl,header=FALSE,sep="\t")
     # Modify Log data
@@ -190,6 +193,12 @@ getUniprotID <- function(id,dismask,consmask,ftmask,imask){
   return(substr(result[96], 20,30)) 
 }
 
+### Return a CompareMotif ID according to jobID
+getCompareID <- function(id){
+  url = paste0(settings$resturl,"comparimotif&motifs=rest:",id,":main&searchdb=elm")
+  result <- readLines(url,warn=FALSE)
+  return(substr(result[96], 22,32))
+}
 ############### ::: UPDATE DATA ::: ##################
 #!# This is the old function that needs updating with above functions
 #i# This function is called by server.R in a reactiveValues() call.

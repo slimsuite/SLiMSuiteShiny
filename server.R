@@ -16,6 +16,7 @@ shinyServer(function(input, output, session) {
   
   #i# JobID to register the jobid in program (UniProt -> JobID; Sequences -> JobID; JobID)
   JobID <- reactiveVal(value = settings$jobid, label = NULL)
+  CompareID <- reactiveVal(value = NULL, label = NULL)
   #i# Get the interactive values when buttons are triggered
   input_job <- eventReactive(input$retrieve,{input$jobid},ignoreNULL=FALSE)
   input_file <- eventReactive(input$upload, {input$file1},ignoreNULL=FALSE)
@@ -73,7 +74,10 @@ shinyServer(function(input, output, session) {
         progx = length(adata$data$restkeys)
         withProgress(message="Retrieving data", value=0, {
           for(ikey in adata$data$restkeys){
-            adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)
+            if(ikey == "compare"){
+              CompareID(getCompareID(JobID()))
+              adata$data[[ikey]] = getRestOutput(CompareID(),ikey,password=input$password)}
+            else{adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)}
             incProgress(1/progx)
           }
           updateSelectInput(session, "prog",
@@ -142,8 +146,12 @@ shinyServer(function(input, output, session) {
         progx = length(adata$data$restkeys)
         withProgress(message="Retrieving data", value=0, {
           for(ikey in adata$data$restkeys){
-            adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)
-            incProgress(1/progx)
+            if(ikey == "compare"){
+              CompareID(getCompareID(JobID()))
+              incProgress(1/4)
+              adata$data[[ikey]] = getRestOutput(CompareID(),ikey,password=input$password)}
+            else{adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)}
+            
           }
           updateSelectInput(session, "prog",
                             label = "SLiMSuite REST program::",
