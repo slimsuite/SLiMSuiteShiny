@@ -76,6 +76,7 @@ shinyServer(function(input, output, session) {
           for(ikey in adata$data$restkeys){
             if(ikey == "compare"){
               CompareID(getCompareID(JobID()))
+              Sys.sleep(10)
               adata$data[[ikey]] = getRestOutput(CompareID(),ikey,password=input$password)}
             else{adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)}
             incProgress(1/progx)
@@ -149,6 +150,7 @@ shinyServer(function(input, output, session) {
             if(ikey == "compare"){
               CompareID(getCompareID(JobID()))
               incProgress(1/4)
+              Sys.sleep(10)
               adata$data[[ikey]] = getRestOutput(CompareID(),ikey,password=input$password)}
             else{adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)}
             
@@ -340,7 +342,5 @@ shinyServer(function(input, output, session) {
     )
     return(HTML(paste(myhtml,sep="<br/>\n",collapse="<br/>\n")))
   })
-  
-    
   
 })
