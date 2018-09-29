@@ -153,7 +153,6 @@ shinyServer(function(input, output, session) {
               Sys.sleep(10)
               adata$data[[ikey]] = getRestOutput(CompareID(),ikey,password=input$password)}
             else{adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)}
-            
           }
           updateSelectInput(session, "prog",
                             label = "SLiMSuite REST program::",

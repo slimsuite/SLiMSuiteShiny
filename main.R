@@ -144,7 +144,23 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
     outfmt = getRestFormat(rest)
   }
   if(outfmt == "text"){ return(readLines(joburl,warn=FALSE)) }
-  if(outfmt == "csv"){ return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))}
+  if(outfmt == "csv"){ 
+    if (rest == "main"){
+      motifs <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+      links <- c()
+      for (i in 1:(length(motifs$Pattern))){
+        link <- paste0("http://rest.slimsuite.unsw.edu.au/comparimotif&motifs=",motifs$Pattern[i],"&searchdb=elm")
+        #x <- readLines(link,warn=FALSE)
+        #joburl = paste0("http://rest.slimsuite.unsw.edu.au/","retrieve&jobid=",substr(x[96], 22,32),"&password=","","&rest=format")
+        #linked_name <- paste0(joburl, motifs$Pattern[i])
+        #motifs$Pattern[i] <- paste(linked_name)
+        #linked_name <- paste0(joburl, motifs$Pattern[i])
+        links<-c(links,link)
+      }
+      motifs$Link <- links
+      return(motifs)
+    }
+    return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))}
   if(outfmt == "tsv"){ 
     #joburl = paste0(settings$resturl,"retrieve&jobid=","18092800018","&rest=",rest)
     return(read.delim(joburl,header=TRUE,sep="\t",stringsAsFactors=FALSE)) }
