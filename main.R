@@ -155,7 +155,7 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
         #linked_name <- paste0(joburl, motifs$Pattern[i])
         #motifs$Pattern[i] <- paste(linked_name)
         #linked_name <- paste0(joburl, motifs$Pattern[i])
-        links<-c(links,link)
+        links<-c(links,HTML("<a href=\"",link,"\">",link,"</a>"))
       }
       motifs$Link <- links
       return(motifs)

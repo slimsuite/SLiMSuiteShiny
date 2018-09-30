@@ -301,6 +301,7 @@ shinyServer(function(input, output, session) {
       adata$data[[input$restout]]
     },
     rownames=FALSE,
+    escape = FALSE,
     options = list(lengthMenu = c(10, 25, 50, 100), pageLength = 25)
   )
   
