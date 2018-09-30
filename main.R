@@ -68,11 +68,11 @@ settings = list(
   #i# Standard REST server &rest keys
   stdkeys = c("status", "version", "ini", "log", "warnings", "errors", "outfmt", "help", "jobid", "intro", "prog"),
   #i# Subset of REST server keys that are not returned by restKeys()
-  restkeys = c("errors", "outfmt", "help", "intro", "prog", "compare"),
+  restkeys = c("errors", "outfmt", "help", "intro", "prog", "compare","self-compare"),
   #i# Define REST output formats
   outfmts = c("none","text","csv","tsv","log"),
   csv = c("main","occ"),
-  tsv = c("compare",""),
+  tsv = c("compare","self-compare"),
   #i# Whether to run in debugging mode
   debug = TRUE,
   #i# Default program
@@ -150,11 +150,6 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
       links <- c()
       for (i in 1:(length(motifs$Pattern))){
         link <- paste0("http://rest.slimsuite.unsw.edu.au/comparimotif&motifs=",motifs$Pattern[i],"&searchdb=elm")
-        #x <- readLines(link,warn=FALSE)
-        #joburl = paste0("http://rest.slimsuite.unsw.edu.au/","retrieve&jobid=",substr(x[96], 22,32),"&password=","","&rest=format")
-        #linked_name <- paste0(joburl, motifs$Pattern[i])
-        #motifs$Pattern[i] <- paste(linked_name)
-        #linked_name <- paste0(joburl, motifs$Pattern[i])
         links<-c(links,HTML("<a href=\"",link,"\">",link,"</a>"))
       }
       motifs$Link <- links
@@ -212,6 +207,13 @@ getUniprotID <- function(id,dismask,consmask,ftmask,imask){
 ### Return a CompareMotif ID according to jobID
 getCompareID <- function(id){
   url = paste0(settings$resturl,"comparimotif&motifs=rest:",id,":main&searchdb=elm")
+  result <- readLines(url,warn=FALSE)
+  return(substr(result[96], 22,32))
+}
+
+### Return a Self CompareMotif ID according to jobID
+getSelfCompareID <- function(id){
+  url = paste0(settings$resturl,"comparimotif&motifs=rest:",id,":main&searchdb=rest:",id,":main")
   result <- readLines(url,warn=FALSE)
   return(substr(result[96], 22,32))
 }

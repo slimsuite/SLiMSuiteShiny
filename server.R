@@ -17,6 +17,7 @@ shinyServer(function(input, output, session) {
   #i# JobID to register the jobid in program (UniProt -> JobID; Sequences -> JobID; JobID)
   JobID <- reactiveVal(value = settings$jobid, label = NULL)
   CompareID <- reactiveVal(value = NULL, label = NULL)
+  SelfCompareID <- reactiveVal(value = NULL, label = NULL)
   #i# Get the interactive values when buttons are triggered
   input_job <- eventReactive(input$retrieve,{input$jobid},ignoreNULL=FALSE)
   input_file <- eventReactive(input$upload, {input$file1},ignoreNULL=FALSE)
@@ -77,7 +78,11 @@ shinyServer(function(input, output, session) {
             if(ikey == "compare"){
               CompareID(getCompareID(JobID()))
               Sys.sleep(10)
-              adata$data[[ikey]] = getRestOutput(CompareID(),ikey,password=input$password)}
+              adata$data[[ikey]] = getRestOutput(CompareID(),"compare",password=input$password)}
+            else if(ikey == "self-compare"){
+              SelfCompareID(getSelfCompareID(JobID()))
+              Sys.sleep(10)
+              adata$data[[ikey]] = getRestOutput(SelfCompareID(),"compare",password=input$password)}
             else{adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)}
             incProgress(1/progx)
           }
@@ -151,7 +156,11 @@ shinyServer(function(input, output, session) {
               CompareID(getCompareID(JobID()))
               incProgress(1/4)
               Sys.sleep(10)
-              adata$data[[ikey]] = getRestOutput(CompareID(),ikey,password=input$password)}
+              adata$data[[ikey]] = getRestOutput(CompareID(),"compare",password=input$password)}
+            else if(ikey == "self-compare"){
+              SelfCompareID(getSelfCompareID(JobID()))
+              Sys.sleep(10)
+              adata$data[[ikey]] = getRestOutput(SelfCompareID(),"compare",password=input$password)}
             else{adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)}
           }
           updateSelectInput(session, "prog",
