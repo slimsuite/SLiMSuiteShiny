@@ -57,7 +57,7 @@ load_or_install = function(package_names)
   } 
 }
 # Load or install required libraries
-load_or_install(c("shiny", "httr", "DT", "markdown","plyr","tools","shinyjs"))
+load_or_install(c("shiny", "httr", "DT", "markdown","plyr","tools","shinyjs","igraph","visNetwork"))
 
 ############### ::: SET DEFAULTS ::: ##################
 settings = list(
@@ -217,6 +217,7 @@ getSelfCompareID <- function(id){
   result <- readLines(url,warn=FALSE)
   return(substr(result[96], 22,32))
 }
+
 ############### ::: UPDATE DATA ::: ##################
 #!# This is the old function that needs updating with above functions
 #i# This function is called by server.R in a reactiveValues() call.
@@ -258,6 +259,8 @@ setData = function(jobid,prog="retrieve",password="",extra=c(),formats=c()){
   return(rdata)
 }
 #cat(as.character(pep[1:10,1]))
+
+
 
 ############### ::: SHINY CODE INFO ::: ##################
 #i# This section contains some information comments that can be deleted in actual Apps.

@@ -313,7 +313,14 @@ shinyServer(function(input, output, session) {
     escape = FALSE,
     options = list(lengthMenu = c(10, 25, 50, 100), pageLength = 25)
   )
-  
+  #i# Data visnetwork output
+  output$restoutTreeGraph <- renderVisNetwork({
+    # minimal example
+    nodes <- data.frame(id = 1:3)
+    edges <- data.frame(from = c(1,2), to = c(1,3))
+    
+    visNetwork(nodes, edges)
+  })
   
   ### Specifc server output rendering
   #i# Return multi-line HTML coded text

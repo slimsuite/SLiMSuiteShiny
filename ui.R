@@ -115,7 +115,8 @@ shinyUI(fluidPage(
                  conditionalPanel(
                    condition = "input.restformat == 'plot'",
                    #!# Add title then verbatimTextOutput("restout"),
-                   htmlOutput("restoutTitle")
+                   #htmlOutput("restoutTitle")
+                   visNetworkOutput("restoutTreeGraph")
                    #!# htmlOutput("restoutPlot")
                  ),
                  #i# class = Server output classes
