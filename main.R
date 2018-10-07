@@ -222,9 +222,7 @@ getSelfCompareID <- function(id){
 
 ############### ::: PLOT FUNCTIONS ::: ##################
 ### Return the nodes for graph
-getNodes <- function(){
-  resturl = "http://rest.slimsuite.unsw.edu.au/"
-  jobid = "17092800011"
+getNodes <- function(jobid){
   joburl = paste0(resturl,"retrieve&jobid=",jobid,"&password=","","&rest=occ")
   x <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
   a <- c()
@@ -254,11 +252,10 @@ getNodes <- function(){
 }
 
 ### Return the edges for graph
-getEdges<- function(nodes){
+getEdges<- function(jobid,nodes){
   node1<-c()
   node2<-c()
   # protein&motif relation
-  jobid = "17092800011"
   joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=","","&rest=occ")
   x <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
   for (i in 1:length(x$Pattern)){

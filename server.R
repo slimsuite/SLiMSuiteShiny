@@ -316,10 +316,10 @@ shinyServer(function(input, output, session) {
   #i# Data visnetwork output
   output$restoutTreeGraph <- renderVisNetwork({
     # process nodes
-    n<- getNodes()
+    n<- getNodes(JobID())
     nnodes <- length(n)
     # process edges
-    e<- getEdges(n)
+    e<- getEdges(JobID(),n)
     #node1<-c()
     #node2<-c()
     #for(i in 1:length(e[,1])){}
