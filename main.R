@@ -57,7 +57,7 @@ load_or_install = function(package_names)
   } 
 }
 # Load or install required libraries
-load_or_install(c("shiny", "httr", "DT", "markdown","plyr","tools","shinyjs"))
+load_or_install(c("shiny", "httr", "DT", "markdown","plyr","tools","shinyjs","igraph","visNetwork"))
 
 ############### ::: SET DEFAULTS ::: ##################
 settings = list(
@@ -167,6 +167,8 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
     logdata = logdata[,c(4,1,2,3)]
     return(logdata) 
   }
+  #if (outfmt == 'plot'){
+  #  if (rest== 'cloud'){return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))}}
 }
 ### Check the masking options
 # http://rest.slimsuite.unsw.edu.au/docs&page=module:qslimfinder
@@ -217,6 +219,84 @@ getSelfCompareID <- function(id){
   result <- readLines(url,warn=FALSE)
   return(substr(result[96], 22,32))
 }
+
+############### ::: PLOT FUNCTIONS ::: ##################
+### Return the nodes for graph
+getNodes <- function(){
+  resturl = "http://rest.slimsuite.unsw.edu.au/"
+  jobid = "17092800011"
+  joburl = paste0(resturl,"retrieve&jobid=",jobid,"&password=","","&rest=occ")
+  x <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+  a <- c()
+  # find protein nodes
+  for (se in x$Seq){
+    register <- TRUE
+    for (s in a){
+      if (identical(se,s)){
+        register<- FALSE
+      }}
+    if (register){
+      a<-c(a,se)
+    }
+  }
+  # find motif nodes
+  for (pa in x$Pattern){
+    register <- TRUE
+    for (p in a){
+      if (identical(pa,p)){
+        register<- FALSE
+      }}
+    if (register){
+      a<-c(a,pa)
+    }
+  }
+  return(a)
+}
+
+### Return the edges for graph
+getEdges<- function(nodes){
+  node1<-c()
+  node2<-c()
+  # protein&motif relation
+  jobid = "17092800011"
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=","","&rest=occ")
+  x <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+  for (i in 1:length(x$Pattern)){
+    node1<-c(node1,match(x$Seq[i],nodes))
+    node2<-c(node2,match(x$Pattern[i],nodes))
+  }
+  # motif&motif relation
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=","","&rest=main")
+  y <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+  for (i in 1:length(y$Cloud)){
+    for (j in 1:length(y$Cloud)){
+      if (y$Cloud[i]==y$Cloud[j]){
+        if (i != j){
+          node1<-c(node1,match(y$Pattern[i],nodes))
+          node2<-c(node2,match(y$Pattern[j],nodes))
+        }
+      }
+    }
+  }
+  # protein&protein relation
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=","","&rest=upc")
+  z <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+  for (i in 2:length(z[,1])){
+    proteins <- strsplit(z[,1][i], '\t')[[1]][4]
+    protein<- strsplit(proteins," ")
+    for(m in 1:length(protein[[1]])){
+      for(n in 1:length(protein[[1]])){
+        if (m!=n){ 
+          node1<-c(node1,match(protein[[1]][m],nodes))
+          node2<-c(node2,match(protein[[1]][n],nodes))}
+      }
+    }
+  }
+  M <- cbind(node1,node2)
+  return(M)
+}
+
+
 ############### ::: UPDATE DATA ::: ##################
 #!# This is the old function that needs updating with above functions
 #i# This function is called by server.R in a reactiveValues() call.
@@ -258,6 +338,8 @@ setData = function(jobid,prog="retrieve",password="",extra=c(),formats=c()){
   return(rdata)
 }
 #cat(as.character(pep[1:10,1]))
+
+
 
 ############### ::: SHINY CODE INFO ::: ##################
 #i# This section contains some information comments that can be deleted in actual Apps.
