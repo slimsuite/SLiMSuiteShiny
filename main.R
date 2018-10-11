@@ -155,6 +155,20 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
       motifs$Link <- links
       return(motifs)
     }
+    # add ProViz link in occ table
+    if (rest == "occ"){
+      motifs <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+      links <- c()
+      for (i in 1:(length(motifs$Seq))){
+        uniprotID <- strsplit(motifs$Seq[i], "__")[[1]][2]
+        start <- motifs$Start_Pos[i]
+        end <- motifs$End_Pos[i]
+        link <- paste0("http://proviz.ucd.ie/proviz.php?uniprot_acc=",uniprotID,"&ali_start=",start,"&ali_end=",end)
+        links <- c(links,HTML("<a href=\"",link,"\">",link,"</a>"))
+      }
+      motifs$ProViz <- links
+      return(motifs)
+    }
     return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))}
   if(outfmt == "tsv"){ 
     #joburl = paste0(settings$resturl,"retrieve&jobid=","18092800018","&rest=",rest)
