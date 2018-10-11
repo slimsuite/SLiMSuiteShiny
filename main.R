@@ -237,7 +237,7 @@ getSelfCompareID <- function(id){
 ############### ::: PLOT FUNCTIONS ::: ##################
 ### Return the nodes for graph
 getNodes <- function(jobid){
-  joburl = paste0(resturl,"retrieve&jobid=",jobid,"&password=","","&rest=occ")
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=","","&rest=occ")
   x <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
   a <- c()
   # find protein nodes
