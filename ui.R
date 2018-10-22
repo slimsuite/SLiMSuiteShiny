@@ -33,7 +33,7 @@ shinyUI(fluidPage(
           $(id).css("visibility", "hidden");
         });
       '),
-      textInput("uniprotid", "REST Server Uniprot ID:",value=NULL, placeholder = NULL),
+      textInput("uniprotid", "Input Uniprot IDs:",value=NULL, placeholder = NULL),
       wellPanel("Please choose masking options:",
       checkboxInput("dismask", "Disorder masking", value=FALSE),
       checkboxInput("consmask", "Conservation masking", value=FALSE),
