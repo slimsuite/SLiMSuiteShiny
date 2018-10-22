@@ -150,12 +150,14 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
   }
   if(outfmt == "text"){ return(readLines(joburl,warn=FALSE)) }
   if(outfmt == "csv"){ 
+    # add CompariMotifs link in main table
     if (rest == "main"){
       motifs <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
       links <- c()
       for (i in 1:(length(motifs$Pattern))){
         link <- paste0("http://rest.slimsuite.unsw.edu.au/comparimotif&motifs=",motifs$Pattern[i],"&searchdb=elm")
-        links<-c(links,HTML("<a href=\"",link,"\">",link,"</a>"))
+        text <- c("Show CompariMotif Information")
+        links <- c(links,HTML("<a href=",link,">",text,"</a>"))
       }
       motifs$Link <- links
       return(motifs)
@@ -169,7 +171,8 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
         start <- motifs$Start_Pos[i]
         end <- motifs$End_Pos[i]
         link <- paste0("http://proviz.ucd.ie/proviz.php?uniprot_acc=",uniprotID,"&ali_start=",start,"&ali_end=",end)
-        links <- c(links,HTML("<a href=\"",link,"\">",link,"</a>"))
+        text <- c("Show ProViz Information")
+        links <- c(links,HTML("<a href=",link,">",text,"</a>"))
       }
       motifs$ProViz <- links
       return(motifs)
