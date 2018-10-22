@@ -115,7 +115,11 @@ shinyUI(fluidPage(
                  conditionalPanel(
                    condition = "input.restformat == 'plot'",
                    #!# Add title then verbatimTextOutput("restout"),
-                   #htmlOutput("restoutTitle")
+                   #htmlOutput("restoutTitle")selectInput("selectlayout", label = "Select Layout",
+                   selectInput("selectlayout", label = "Select Layout",
+                               choices = list("Circle" = "layout_in_circle","Nice" = "layout_nicely", "Random" = "layout_randomly", "Piecewise" = "piecewise.layout", "Gem" = "layout.gem"),
+                               selected = "piecewise.layout"),
+                   hr(),
                    visNetworkOutput("restoutTreeGraph")
                    #!# htmlOutput("restoutPlot")
                  ),

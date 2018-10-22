@@ -243,8 +243,8 @@ getSelfCompareID <- function(id){
 }
 
 ############### ::: PLOT FUNCTIONS ::: ##################
-### Return the nodes for graph
-getNodes <- function(jobid){
+### Return protein nodes for graph
+getProteinNodes <- function(jobid){
   joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=","","&rest=occ")
   x <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
   a <- c()
@@ -259,6 +259,13 @@ getNodes <- function(jobid){
       a<-c(a,se)
     }
   }
+  return(a)
+}
+### Return motif nodes for graph
+getMotifNodes <- function(jobid){
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=","","&rest=occ")
+  x <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+  a <- c()
   # find motif nodes
   for (pa in x$Pattern){
     register <- TRUE
