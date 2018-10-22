@@ -93,7 +93,7 @@ setupData = function(){
       emptydb[[rkey]] = ""
     }
   }
-  emptydb$intro = "Enter valid JobID and click 'Retrieve Job'."
+  emptydb$intro = "1. Use \"Upload Data\" to get a JobID.\n2. If already have a JobID, use \"Retrieve Job\"."
   # Return data list
   return(emptydb)
 }
