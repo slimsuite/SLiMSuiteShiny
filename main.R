@@ -114,6 +114,11 @@ isFile <- function(FASTA){
   #if(file_ext(FASTA)=="fasta"){return(TRUE)}
   return(TRUE)
 }
+### Check whether the sequences in the file is leagal
+isSequence<-function(seq){
+  if(substr(seq,0,3) == '>1:'){return(TRUE)}
+  else{return(FALSE)}
+}
 ### Check whether Job has run
 checkJob <- function(jobid,password=""){
   checkurl = paste0(settings$resturl,"check&jobid=",jobid,"&password=",password)
