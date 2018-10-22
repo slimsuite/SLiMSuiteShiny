@@ -321,19 +321,33 @@ shinyServer(function(input, output, session) {
   #i# Data visnetwork output
   output$restoutTreeGraph <- renderVisNetwork({
     # process nodes
-    n<- getNodes(JobID())
+    protein<- getProteinNodes(JobID())
+    motif <- getMotifNodes(JobID())
+    np <- length(protein)
+    nm <- length(motif)
+    n <- c(protein,motif)
     nnodes <- length(n)
     # process edges
     e<- getEdges(JobID(),n)
+    # set group
+    g <- c()
+    for(i in 1:np){g<-c(g,'P')}
+    for(j in 1:nm){g<-c(g,'M')}
     #node1<-c()
     #node2<-c()
     #for(i in 1:length(e[,1])){}
+    #g4 = graph.union(g1,g2, byname = TRUE)
     nodes <- data.frame(id = 1:nnodes,
-                        label = paste(n,1:nnodes))
+                        label = paste(n,1:nnodes),
+                        group = g
+                        )
     edges <- data.frame(from = e[,1], to = e[,2])
     visNetwork(nodes, edges, height = "500px") %>%
-      visIgraphLayout() %>%
-      visNodes(size = 10)  
+      visIgraphLayout(layout = input$selectlayout) %>%
+      visGroups(groupname = "P", color = "orange",shape="square") %>%
+      visGroups(groupname = "M", color = "lightblue") %>%
+      visNodes(size = 10) %>%
+      visLegend(width = 0.1, position = "left", main = "Group") 
   })
   
   ### Specifc server output rendering
