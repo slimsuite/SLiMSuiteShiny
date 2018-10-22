@@ -120,14 +120,19 @@ shinyServer(function(input, output, session) {
           #i# First, check FASTA file
           if(!is.null(input_file())){
             if(!(isFile(input_file()))){
-              adata$data$status = paste("ERROR:",input_file(),"is an invalid path.")
+              adata$data$status = paste("ERROR:",input_file(),"invalid file path.")
               return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
             }else{
               file1 = input_file()
               sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
               sequences = gsub("[\r\n\t]", "", sequences)
-              JobID(getSequences(sequences,input_disorder(),input_conservation(),input_ft(),input_i()))
-              session$sendCustomMessage(type = "resetFileInputHandler", "file1")
+              if(isSequence(sequences)){
+                JobID(getSequences(sequences,input_disorder(),input_conservation(),input_ft(),input_i()))
+                session$sendCustomMessage(type = "resetFileInputHandler", "file1")}
+              else{
+                adata$data$status = paste("ERROR:",sequences,"invalid.\n Should be >1:Sequence,2:Sequence,...")
+                return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
+              }
               #shinyjs::reset("file1")
             }
             #i# second, check UniprotID
