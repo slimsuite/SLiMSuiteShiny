@@ -116,9 +116,27 @@ isFile <- function(FASTA){
 }
 ### Check whether the sequences in the file is leagal
 isSequence<-function(seq){
-  if(substr(seq,0,3) == '>1:'){return(TRUE)}
+  if(substr(seq,1,1) == '>'){return(TRUE)}
   else{return(FALSE)}
 }
+### If the sequences are leagal, modify them to meet the requirement to put in url
+modifySequence <- function(seq) {
+  seq_list = strsplit(seq, ">")[[1]]
+  modified = ""
+  n = 1
+  for (s in seq_list) {
+    if (s != "") {
+      pure_seq = gsub(".*?\\n(.*)", "\\1", s)
+      pure_seq = gsub("\\n", "", pure_seq)
+      seq_string = paste(">", n, ":", pure_seq, sep = "")
+      if (n > 1) {modified = paste(modified, seq_string, sep = ",")}
+      else {modified = seq_string}
+      n = n + 1
+    }
+  }
+  return (modified)
+}
+
 ### Check whether Job has run
 checkJob <- function(jobid,password=""){
   checkurl = paste0(settings$resturl,"check&jobid=",jobid,"&password=",password)
