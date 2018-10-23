@@ -125,12 +125,13 @@ shinyServer(function(input, output, session) {
             }else{
               file1 = input_file()
               sequences <- readChar(file1$datapath,file.info(file1$datapath)$size)
-              sequences = gsub("[\r\n\t]", "", sequences)
+              sequences = gsub("[\r\t]", "", sequences)
               if(isSequence(sequences)){
+                sequences = modifySequence(sequences)
                 JobID(getSequences(sequences,input_disorder(),input_conservation(),input_ft(),input_i()))
                 session$sendCustomMessage(type = "resetFileInputHandler", "file1")}
               else{
-                adata$data$status = paste("ERROR:",sequences,"invalid.\n Should be >1:Sequence,2:Sequence,...")
+                adata$data$status = paste("ERROR:",sequences,"file not in fasta format.")
                 return(paste(as.character(adata$data$status),sep="\n",collapse="\n"))
               }
               #shinyjs::reset("file1")

@@ -116,9 +116,35 @@ isFile <- function(FASTA){
 }
 ### Check whether the sequences in the file is leagal
 isSequence<-function(seq){
-  if(substr(seq,0,3) == '>1:'){return(TRUE)}
+  if(substr(seq,1,1) == '>'){return(TRUE)}
   else{return(FALSE)}
 }
+### If the sequences are leagal, modify them to meet the requirement to put in url
+modifySequence <- function(seq) {
+  seq_list = strsplit(seq, "\\n")[[1]]
+  modified = ""
+  i = 1
+  n = 1
+  while (n <= length(seq_list)) {
+    s = seq_list[n]
+    if (s != "") {
+      prefix = strsplit(s, " ")[[1]][1]
+      # if there is not uniprot ID for this sequence, use the original tag
+      if (prefix == "") {
+        prefix = s
+      }
+      seq = paste0(prefix, ":", seq_list[n+1])
+    }
+    if (modified != "") {
+      modified = paste0(modified, ",", seq)
+    } else {
+      modified = seq
+    }
+    n = n + 2
+  }
+  return (modified)
+}
+
 ### Check whether Job has run
 checkJob <- function(jobid,password=""){
   checkurl = paste0(settings$resturl,"check&jobid=",jobid,"&password=",password)
@@ -168,11 +194,22 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
       links <- c()
       for (i in 1:(length(motifs$Seq))){
         uniprotID <- strsplit(motifs$Seq[i], "__")[[1]][2]
-        start <- motifs$Start_Pos[i]
-        end <- motifs$End_Pos[i]
-        link <- paste0("http://proviz.ucd.ie/proviz.php?uniprot_acc=",uniprotID,"&ali_start=",start,"&ali_end=",end)
-        text <- c("Show ProViz Information")
-        links <- c(links,HTML("<a href=",link,">",text,"</a>"))
+        # check if what we get is in uniprot ID format: P22363
+        isUniprotID = grep("\\w\\d+", uniprotID)
+        # only generate url for having Uniprot ID
+        if (length(isUniprotID) > 0 && isUniprotID == 1) {
+          start <- motifs$Start_Pos[i]
+          end <- motifs$End_Pos[i]
+          showStart = start - 40
+          showEnd = end + 40
+          pattern_match <- motifs$Match[i]
+          link <- paste0("http://proviz.ucd.ie/proviz.php?uniprot_acc=",uniprotID,"&ali_start=",showStart,"&ali_end=",showEnd,
+                         "&tracks=peptides,SLiMFinder,AAA,",pattern_match,",",start,",",end)
+          text <- c("Show ProViz Information")
+          links <- c(links,HTML("<a href=",link,">",text,"</a>"))
+        } else {
+          links <- c(links, HTML("Didn't find Uniprot ID in given file. Cannot generate ProViz information without Uniprot ID."))
+        }
       }
       motifs$ProViz <- links
       return(motifs)
