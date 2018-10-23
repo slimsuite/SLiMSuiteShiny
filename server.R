@@ -77,11 +77,11 @@ shinyServer(function(input, output, session) {
           for(ikey in adata$data$restkeys){
             if(ikey == "compare"){
               CompareID(getCompareID(JobID()))
-              Sys.sleep(10)
+              #Sys.sleep(10)
               adata$data[[ikey]] = getRestOutput(CompareID(),"compare",password=input$password)}
             else if(ikey == "self-compare"){
               SelfCompareID(getSelfCompareID(JobID()))
-              Sys.sleep(10)
+              #Sys.sleep(10)
               adata$data[[ikey]] = getRestOutput(SelfCompareID(),"compare",password=input$password)}
             else{adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)}
             incProgress(1/progx)
@@ -161,11 +161,9 @@ shinyServer(function(input, output, session) {
             if(ikey == "compare"){
               CompareID(getCompareID(JobID()))
               incProgress(1/4)
-              Sys.sleep(10)
               adata$data[[ikey]] = getRestOutput(CompareID(),"compare",password=input$password)}
             else if(ikey == "self-compare"){
               SelfCompareID(getSelfCompareID(JobID()))
-              Sys.sleep(10)
               adata$data[[ikey]] = getRestOutput(SelfCompareID(),"compare",password=input$password)}
             else{adata$data[[ikey]] = getRestOutput(JobID(),ikey,password=input$password)}
           }
@@ -194,6 +192,7 @@ shinyServer(function(input, output, session) {
   })
   })
   
+#i# If JobID changed, put the new jobid into text-JobID  
   observe({
     x<-JobID()
     updateTextInput(session, "jobid", value = paste(x))})
@@ -210,8 +209,6 @@ shinyServer(function(input, output, session) {
     }
   })
 
-  
-  
   ### SECTION 3 - Output tabs: data rendering
   ### Standard Server Outputs
   # Verbatim text outputs

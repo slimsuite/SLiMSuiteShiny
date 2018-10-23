@@ -267,15 +267,29 @@ getUniprotID <- function(id,dismask,consmask,ftmask,imask){
 
 ### Return a CompareMotif ID according to jobID
 getCompareID <- function(id){
-  url = paste0(settings$resturl,"comparimotif&motifs=rest:",id,":main&searchdb=elm")
-  result <- readLines(url,warn=FALSE)
-  return(substr(result[96], 22,32))
+  url_1 = paste0(settings$resturl,"comparimotif&motifs=rest:",id,":main&searchdb=elm")
+  #  check the status of the job
+  status_1 = readLines(url_1,warn=FALSE)
+  while((! status_1 %in% c("Finished","Failed","refresh"))&&(status_1 %in%c("refresh"))){
+    writeLines(paste0(status_1," - Sleep!"))
+    Sys.sleep(5)   # We will pause for a five seconds to give the job a chance
+    status_1 = readLines(url_1,warn=FALSE)
+  }
+  result_1 <- readLines(url_1,warn=FALSE)
+  return(substr(result_1[96], 22,32))
 }
 
 ### Return a Self CompareMotif ID according to jobID
 getSelfCompareID <- function(id){
-  url = paste0(settings$resturl,"comparimotif&motifs=rest:",id,":main&searchdb=rest:",id,":main")
-  result <- readLines(url,warn=FALSE)
+  url_2 = paste0(settings$resturl,"comparimotif&motifs=rest:",id,":main&searchdb=rest:",id,":main")
+  #  check the status of the job
+  status_2 = readLines(url_2,warn=FALSE)
+  while((! status_2 %in% c("Finished","Failed","refresh"))&&(status_2 %in%c("refresh"))){
+    writeLines(paste0(status_2," - Sleep!"))
+    Sys.sleep(5)   # We will pause for a five seconds to give the job a chance
+    status_2 = readLines(url_2,warn=FALSE)
+  }
+  result <- readLines(url_2,warn=FALSE)
   return(substr(result[96], 22,32))
 }
 
