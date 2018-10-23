@@ -189,11 +189,15 @@ shinyServer(function(input, output, session) {
           )
         })
       })
+
     return(paste(as.character(adata$data$status),sep="\n","JobID:",JobID(),collapse="\n"))
   })
   })
   
-
+  observe({
+    x<-JobID()
+    updateTextInput(session, "jobid", value = paste(x))})
+  
   #i# Additional text output reporting what is in the Results tab
   # maybe should add input$upload > 0 ?
   output$resultsChoice <- renderUI({
