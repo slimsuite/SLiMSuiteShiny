@@ -77,7 +77,7 @@ shinyServer(function(input, output, session) {
           for(ikey in adata$data$restkeys){
             if(ikey == "compare"){
               CompareID(getCompareID(JobID()))
-              #Sys.sleep(10)
+              Sys.sleep(10)
               adata$data[[ikey]] = getRestOutput(CompareID(),"compare",password=input$password)}
             else if(ikey == "self-compare"){
               SelfCompareID(getSelfCompareID(JobID()))
@@ -161,6 +161,7 @@ shinyServer(function(input, output, session) {
             if(ikey == "compare"){
               CompareID(getCompareID(JobID()))
               incProgress(1/4)
+              Sys.sleep(10)
               adata$data[[ikey]] = getRestOutput(CompareID(),"compare",password=input$password)}
             else if(ikey == "self-compare"){
               SelfCompareID(getSelfCompareID(JobID()))
