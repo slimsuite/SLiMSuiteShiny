@@ -5,6 +5,7 @@ source("main.R")
 ############### ::: USER INTERFACE ::: ##################
 # Define the UI.
 shinyUI(fluidPage(
+  #useShinyjs(),
   #>>># This code block should be copied to the standalone app ui code when changed #>>>#
   # Application title.
   titlePanel(info$apptitle),
@@ -16,20 +17,39 @@ shinyUI(fluidPage(
       # Description markdown file
       #i# Can include static MD like this: #includeMarkdown("summary.md"),
       htmlOutput("summary"),
+
+      tabsetPanel(
+      
+      # Upload data to the SlimFind server  
+      tabPanel("Upload Data",
+      # Input: Select a file or upload a FASTA file----
+      fileInput("file1", "Please upload a file(maximum 30MB):", multiple = FALSE),
+      # , accept = c("text/csv", "text/comma-separated-values,text/plain",".csv")
+      tags$script('
+        Shiny.addCustomMessageHandler("resetFileInputHandler", function(x) {   
+          var el = $("#" + x);
+          el.css("width", "0%");
+          var id = "#" + x + "_progress";     
+          $(id).css("visibility", "hidden");
+        });
+      '),
+      textInput("uniprotid", "Input Uniprot IDs:",value=NULL, placeholder = NULL),
+      wellPanel("Please choose masking options:",
+      checkboxInput("dismask", "Disorder masking", value=FALSE),
+      checkboxInput("consmask", "Conservation masking", value=FALSE),
+      selectizeInput("ftmask", "UniProt features to mask out", c("None"), selected = NULL, multiple = FALSE),
+      selectizeInput("imask", "UniProt features to inversely mask (Sequence MUST have 1+ features)", c("None"), selected = NULL, multiple = FALSE)
+      ),
+      actionButton("upload", "Upload Data")
+      ),
+      
+      # Retrieve the output from Slimfind server using jobid
+      tabPanel("Retrieve Job",
       #i# This program selection is used experimentally to control output. It might be possible to remove.
       #i# Would be better to change to select an output style
       selectInput("prog", "SLiMSuite REST program:", c("None"),selected="None"),
       # Set parameters for REST job retrieval
-      wellPanel("Input a Job ID or a FASTA file or a Uniprot ID:",
-      # Input: Select a file or upload a FASTA file----
-      fileInput("file", "REST Server FASTA file(maximum 30MB):", multiple = FALSE, accept = c("text/csv", "text/comma-separated-values,text/plain",".csv")),
-      textInput("uniprotid", "REST Server Uniprot ID:", settings$uniprotid),
-      wellPanel("Please choose one:",
-      checkboxInput("maskF", "Disorder masking", value=FALSE),
-      checkboxInput("maskT", "Conservation masking", value=FALSE)
-      ),
-      textInput("jobid", "REST Server Job ID:", settings$jobid)
-      ),
+      textInput("jobid", "REST Server Job ID:", settings$jobid), 
       textInput("password", "Job Password [Optional]:", ""),
       selectInput("restout", "REST Output to retrieve:", c("status"), "status"),
       #X#textInput("restout", "REST Output to retrieve:", "status"),
@@ -43,7 +63,8 @@ shinyUI(fluidPage(
       checkboxInput("showini", "Show INI file content (Run tab)", value=FALSE),
       checkboxInput("showout", "Show REST output keys (Run tab)", value=TRUE),
       checkboxInput("showdesc", "Show server description", value=FALSE),
-      checkboxInput("showinfo", "Show explanation of server output", value=TRUE),
+      checkboxInput("showinfo", "Show explanation of server output", value=TRUE)
+      )),
       
       # HTML content to include at end. Contains version number.
       htmlOutput("footer")
@@ -94,7 +115,12 @@ shinyUI(fluidPage(
                  conditionalPanel(
                    condition = "input.restformat == 'plot'",
                    #!# Add title then verbatimTextOutput("restout"),
-                   htmlOutput("restoutTitle")
+                   #htmlOutput("restoutTitle")selectInput("selectlayout", label = "Select Layout",
+                   selectInput("selectlayout", label = "Select Layout",
+                               choices = list("Circle" = "layout_in_circle","Nice" = "layout_nicely", "Random" = "layout_randomly", "Piecewise" = "piecewise.layout", "Gem" = "layout.gem"),
+                               selected = "piecewise.layout"),
+                   hr(),
+                   visNetworkOutput("restoutTreeGraph")
                    #!# htmlOutput("restoutPlot")
                  ),
                  #i# class = Server output classes
