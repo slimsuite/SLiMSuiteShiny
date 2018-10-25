@@ -214,17 +214,18 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
       motifs$ProViz <- links
       return(motifs)
     }
-    if (rest == "compare"){
-      
-      # http://rest.slimsuite.unsw.edu.au/retrieve&jobid=18102500110&rest=format&password=None&refresh=1
-      status = readLines(joburl,warn=FALSE)
-      while(! status %in% c("Finished","Failed")){
-        writeLines(paste0(status," - Sleep!"))
-        Sys.sleep(5)   # We will pause for a five seconds to give the job a chance
-        status = readLines(joburl,warn=FALSE)
-      }
-      return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))
-    }
+#    if (rest == "compare"){
+#      url = paste0(settings$resturl,"retrieve&jobid=",jobid,"&rest=format")
+#      # http://rest.slimsuite.unsw.edu.au/retrieve&jobid=18102500110&rest=format&password=None&refresh=1
+#      # add job status check 
+#      status = readLines(url,warn=FALSE)
+#      while(! status %in% c("Finished","Failed")){
+#       writeLines(paste0(status," - Sleep!"))
+#        Sys.sleep(10)   # We will pause for a five seconds to give the job a chance
+#        status = readLines(url,warn=FALSE)
+#      }
+#      return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))
+#    }
     return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))}
   if(outfmt == "tsv"){ 
     #joburl = paste0(settings$resturl,"retrieve&jobid=","18092800018","&rest=",rest)
@@ -280,13 +281,18 @@ getUniprotID <- function(id,dismask,consmask,ftmask,imask){
 getCompareID <- function(id){
   url_1 = paste0(settings$resturl,"comparimotif&motifs=rest:",id,":main&searchdb=elm")
   #  check the status of the job
-  status_1 = readLines(url_1,warn=FALSE)
-  while((! status_1 %in% c("Finished","Failed","refresh"))&&(status_1 %in%c("refresh"))){
-    writeLines(paste0(status_1," - Sleep!"))
-    Sys.sleep(5)   # We will pause for a five seconds to give the job a chance
-    status_1 = readLines(url_1,warn=FALSE)
-  }
+  restbase = "http://rest.slimsuite.unsw.edu.au/"
   result_1 <- readLines(url_1,warn=FALSE)
+  jobid <- substr(result_1[96], 22,32)
+  url = paste0(restbase,"check","&jobid=",jobid)
+  # http://rest.slimsuite.unsw.edu.au/retrieve&jobid=18102500110&rest=format&password=None&refresh=1
+  # add job status check 
+  status = readLines(url,warn=FALSE)
+  while(! status %in% c("Finished","Failed")){
+    writeLines(paste0(status," - Sleep!"))
+    Sys.sleep(10)   # We will pause for a five seconds to give the job a chance
+    status = readLines(url,warn=FALSE)
+  }
   return(substr(result_1[96], 22,32))
 }
 
@@ -294,13 +300,18 @@ getCompareID <- function(id){
 getSelfCompareID <- function(id){
   url_2 = paste0(settings$resturl,"comparimotif&motifs=rest:",id,":main&searchdb=rest:",id,":main")
   #  check the status of the job
-  status_2 = readLines(url_2,warn=FALSE)
-  while((! status_2 %in% c("Finished","Failed","refresh"))&&(status_2 %in%c("refresh"))){
-    writeLines(paste0(status_2," - Sleep!"))
-    Sys.sleep(5)   # We will pause for a five seconds to give the job a chance
-    status_2 = readLines(url_2,warn=FALSE)
-  }
+  restbase = "http://rest.slimsuite.unsw.edu.au/"
   result <- readLines(url_2,warn=FALSE)
+  jobid <- substr(result[96], 22,32)
+  url = paste0(restbase,"check","&jobid=",jobid)
+  # http://rest.slimsuite.unsw.edu.au/retrieve&jobid=18102500110&rest=format&password=None&refresh=1
+  # add job status check 
+  status = readLines(url,warn=FALSE)
+  while(! status %in% c("Finished","Failed")){
+    writeLines(paste0(status," - Sleep!"))
+    Sys.sleep(10)   # We will pause for a five seconds to give the job a chance
+    status = readLines(url,warn=FALSE)
+  }
   return(substr(result[96], 22,32))
 }
 
