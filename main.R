@@ -214,6 +214,17 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
       motifs$ProViz <- links
       return(motifs)
     }
+    if (rest == "compare"){
+      
+      # http://rest.slimsuite.unsw.edu.au/retrieve&jobid=18102500110&rest=format&password=None&refresh=1
+      status = readLines(joburl,warn=FALSE)
+      while(! status %in% c("Finished","Failed")){
+        writeLines(paste0(status," - Sleep!"))
+        Sys.sleep(5)   # We will pause for a five seconds to give the job a chance
+        status = readLines(joburl,warn=FALSE)
+      }
+      return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))
+    }
     return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))}
   if(outfmt == "tsv"){ 
     #joburl = paste0(settings$resturl,"retrieve&jobid=","18092800018","&rest=",rest)
