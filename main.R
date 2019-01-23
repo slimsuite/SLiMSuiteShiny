@@ -57,7 +57,7 @@ load_or_install = function(package_names)
   } 
 }
 # Load or install required libraries
-load_or_install(c("shiny", "httr", "DT", "markdown","plyr"))
+load_or_install(c("shiny", "httr", "DT", "markdown","plyr","tools","shinyjs","igraph","visNetwork"))
 
 ############### ::: SET DEFAULTS ::: ##################
 settings = list(
@@ -68,11 +68,11 @@ settings = list(
   #i# Standard REST server &rest keys
   stdkeys = c("status", "version", "ini", "log", "warnings", "errors", "outfmt", "help", "jobid", "intro", "prog"),
   #i# Subset of REST server keys that are not returned by restKeys()
-  restkeys = c("errors", "outfmt", "help", "jobid", "intro", "prog"),
+  restkeys = c("errors", "outfmt", "help", "intro", "prog", "compare","self-compare"),
   #i# Define REST output formats
   outfmts = c("none","text","csv","tsv","log"),
   csv = c("main","occ"),
-  tsv = c(),
+  tsv = c("compare","self-compare"),
   #i# Whether to run in debugging mode
   debug = TRUE,
   #i# Default program
@@ -93,7 +93,7 @@ setupData = function(){
       emptydb[[rkey]] = ""
     }
   }
-  emptydb$intro = "Enter valid JobID and click 'Retrieve Job'."
+  emptydb$intro = "1. Use \"Upload Data\" to get a JobID.\n2. If already have a JobID, use \"Retrieve Job\"."
   # Return data list
   return(emptydb)
 }
@@ -107,6 +107,44 @@ isJobID <- function(jobid){
   if(is.na(as.integer(substr(jobid,7,11)))){ return(FALSE) }
   return(TRUE)
 }
+
+### Check whether a file exists and return True or False
+isFile <- function(FASTA){
+  if(length(FASTA)==0){return(FALSE)}
+  #if(file_ext(FASTA)=="fasta"){return(TRUE)}
+  return(TRUE)
+}
+### Check whether the sequences in the file is leagal
+isSequence<-function(seq){
+  if(substr(seq,1,1) == '>'){return(TRUE)}
+  else{return(FALSE)}
+}
+### If the sequences are leagal, modify them to meet the requirement to put in url
+modifySequence <- function(seq) {
+  seq_list = strsplit(seq, "\\n")[[1]]
+  modified = ""
+  i = 1
+  n = 1
+  while (n <= length(seq_list)) {
+    s = seq_list[n]
+    if (s != "") {
+      prefix = strsplit(s, " ")[[1]][1]
+      # if there is not uniprot ID for this sequence, use the original tag
+      if (prefix == "") {
+        prefix = s
+      }
+      seq = paste0(prefix, ":", seq_list[n+1])
+    }
+    if (modified != "") {
+      modified = paste0(modified, ",", seq)
+    } else {
+      modified = seq
+    }
+    n = n + 2
+  }
+  return (modified)
+}
+
 ### Check whether Job has run
 checkJob <- function(jobid,password=""){
   checkurl = paste0(settings$resturl,"check&jobid=",jobid,"&password=",password)
@@ -117,7 +155,7 @@ checkJob <- function(jobid,password=""){
 } 
 ### Function for returning the REST keys
 getRestKeys <- function(jobid,password=""){
-  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=",password,"&rest=restkeys")
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&rest=restkeys")
   return(readLines(joburl,warn=FALSE))
 }
 ### Return the REST output format
@@ -132,13 +170,66 @@ getRestFormat <- function(rest,pure=TRUE){
 }
 ### Return an R object with REST output
 getRestOutput <- function(jobid,rest,outfmt="",password=""){
-  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=",password,"&rest=",rest)
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&rest=",rest)
   if(outfmt == ""){
     outfmt = getRestFormat(rest)
   }
   if(outfmt == "text"){ return(readLines(joburl,warn=FALSE)) }
-  if(outfmt == "csv"){ return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)) }
-  if(outfmt == "tsv"){ return(read.delim(joburl,header=TRUE,sep="\t",stringsAsFactors=FALSE)) }
+  if(outfmt == "csv"){ 
+    # add CompariMotifs link in main table
+    if (rest == "main"){
+      motifs <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+      links <- c()
+      for (i in 1:(length(motifs$Pattern))){
+        link <- paste0("http://rest.slimsuite.unsw.edu.au/comparimotif&motifs=",motifs$Pattern[i],"&searchdb=elm")
+        text <- c("Show CompariMotif Information")
+        links <- c(links,HTML("<a href=",link,">",text,"</a>"))
+      }
+      motifs$Link <- links
+      return(motifs)
+    }
+    # add ProViz link in occ table
+    if (rest == "occ"){
+      motifs <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+      links <- c()
+      for (i in 1:(length(motifs$Seq))){
+        uniprotID <- strsplit(motifs$Seq[i], "__")[[1]][2]
+        # check if what we get is in uniprot ID format: P22363
+        isUniprotID = grep("\\w\\d+", uniprotID)
+        # only generate url for having Uniprot ID
+        if (length(isUniprotID) > 0 && isUniprotID == 1) {
+          start <- motifs$Start_Pos[i]
+          end <- motifs$End_Pos[i]
+          showStart = start - 40
+          showEnd = end + 40
+          pattern_match <- motifs$Match[i]
+          link <- paste0("http://proviz.ucd.ie/proviz.php?uniprot_acc=",uniprotID,"&ali_start=",showStart,"&ali_end=",showEnd,
+                         "&tracks=peptides,SLiMFinder,AAA,",pattern_match,",",start,",",end)
+          text <- c("Show ProViz Information")
+          links <- c(links,HTML("<a href=",link,">",text,"</a>"))
+        } else {
+          links <- c(links, HTML("Didn't find Uniprot ID in given file. Cannot generate ProViz information without Uniprot ID."))
+        }
+      }
+      motifs$ProViz <- links
+      return(motifs)
+    }
+#    if (rest == "compare"){
+#      url = paste0(settings$resturl,"retrieve&jobid=",jobid,"&rest=format")
+#      # http://rest.slimsuite.unsw.edu.au/retrieve&jobid=18102500110&rest=format&password=None&refresh=1
+#      # add job status check 
+#      status = readLines(url,warn=FALSE)
+#      while(! status %in% c("Finished","Failed")){
+#       writeLines(paste0(status," - Sleep!"))
+#        Sys.sleep(10)   # We will pause for a five seconds to give the job a chance
+#        status = readLines(url,warn=FALSE)
+#      }
+#      return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))
+#    }
+    return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))}
+  if(outfmt == "tsv"){ 
+    #joburl = paste0(settings$resturl,"retrieve&jobid=","18092800018","&rest=",rest)
+    return(read.delim(joburl,header=TRUE,sep="\t",stringsAsFactors=FALSE)) }
   if(outfmt == "log"){ 
     logdata = read.delim(joburl,header=FALSE,sep="\t")
     # Modify Log data
@@ -147,7 +238,163 @@ getRestOutput <- function(jobid,rest,outfmt="",password=""){
     logdata = logdata[,c(4,1,2,3)]
     return(logdata) 
   }
+  #if (outfmt == 'plot'){
+  #  if (rest== 'cloud'){return(read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE))}}
 }
+### Check the masking options
+# http://rest.slimsuite.unsw.edu.au/docs&page=module:qslimfinder
+CheckMask <- function(dismask,consmask,ftmask,imask){
+  if (dismask == TRUE){joburl_d = paste0(settings$resturl,"slimfinder&dismask=","T")}
+  else{joburl_d = paste0(settings$resturl,"slimfinder&dismask=","F")}
+  
+  if (consmask == TRUE){joburl_c = paste0(joburl_d,"&consmask=","T")}
+  else{joburl_c = paste0(joburl_d,"&consmask=","F")}
+  
+  if (ftmask == "EM"){joburl_f = paste0(joburl_c,"&ftmask=","EM")}
+  else if (ftmask=="DOMAIN"){joburl_f = paste0(joburl_c,"&ftmask=","DOMAIN")}
+  else if (ftmask=="TRANSMEM") {joburl_f = paste0(joburl_c,"&ftmask=","TRANSMEM")}
+  else{joburl_f =  paste0(joburl_c,"&ftmask=","")}
+  
+  if (imask == "inclusively"){joburl_i = paste0(joburl_f,"&imask=","inclusively")}
+  else {joburl_i = paste0(joburl_f,"&imask=","")}
+  
+  return(joburl_i)
+}
+
+### Return a JobID(Input: sequences) with REST output
+getSequences <- function(se,dismask,consmask,ftmask,imask){
+  maskoptions <- CheckMask(dismask,consmask,ftmask,imask)
+  joburl = paste0(maskoptions,"&seqin=",se)
+  result <- readLines(joburl,warn=FALSE)
+  return(substr(result[96], 20,30)) 
+}
+
+### Return a JobID(Input: UniProtID) with REST output
+getUniprotID <- function(id,dismask,consmask,ftmask,imask){
+  maskoptions <- CheckMask(dismask,consmask,ftmask,imask)
+  joburl = paste0(maskoptions,"&uniprotid=",id)
+  result <- readLines(joburl,warn=FALSE)
+  return(substr(result[96], 20,30)) 
+}
+
+### Return a CompareMotif ID according to jobID
+getCompareID <- function(id){
+  url_1 = paste0(settings$resturl,"comparimotif&motifs=rest:",id,":main&searchdb=elm")
+  #  check the status of the job
+  restbase = "http://rest.slimsuite.unsw.edu.au/"
+  result_1 <- readLines(url_1,warn=FALSE)
+  jobid <- substr(result_1[96], 22,32)
+  url = paste0(restbase,"check","&jobid=",jobid)
+  # http://rest.slimsuite.unsw.edu.au/retrieve&jobid=18102500110&rest=format&password=None&refresh=1
+  # add job status check 
+  status = readLines(url,warn=FALSE)
+  while(! status %in% c("Finished","Failed")){
+    writeLines(paste0(status," - Sleep!"))
+    Sys.sleep(10)   # We will pause for a five seconds to give the job a chance
+    status = readLines(url,warn=FALSE)
+  }
+  return(substr(result_1[96], 22,32))
+}
+
+### Return a Self CompareMotif ID according to jobID
+getSelfCompareID <- function(id){
+  url_2 = paste0(settings$resturl,"comparimotif&motifs=rest:",id,":main&searchdb=rest:",id,":main")
+  #  check the status of the job
+  restbase = "http://rest.slimsuite.unsw.edu.au/"
+  result <- readLines(url_2,warn=FALSE)
+  jobid <- substr(result[96], 22,32)
+  url = paste0(restbase,"check","&jobid=",jobid)
+  # http://rest.slimsuite.unsw.edu.au/retrieve&jobid=18102500110&rest=format&password=None&refresh=1
+  # add job status check 
+  status = readLines(url,warn=FALSE)
+  while(! status %in% c("Finished","Failed")){
+    writeLines(paste0(status," - Sleep!"))
+    Sys.sleep(10)   # We will pause for a five seconds to give the job a chance
+    status = readLines(url,warn=FALSE)
+  }
+  return(substr(result[96], 22,32))
+}
+
+############### ::: PLOT FUNCTIONS ::: ##################
+### Return protein nodes for graph
+getProteinNodes <- function(jobid){
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=","","&rest=occ")
+  x <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+  a <- c()
+  # find protein nodes
+  for (se in x$Seq){
+    register <- TRUE
+    for (s in a){
+      if (identical(se,s)){
+        register<- FALSE
+      }}
+    if (register){
+      a<-c(a,se)
+    }
+  }
+  return(a)
+}
+### Return motif nodes for graph
+getMotifNodes <- function(jobid){
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=","","&rest=occ")
+  x <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+  a <- c()
+  # find motif nodes
+  for (pa in x$Pattern){
+    register <- TRUE
+    for (p in a){
+      if (identical(pa,p)){
+        register<- FALSE
+      }}
+    if (register){
+      a<-c(a,pa)
+    }
+  }
+  return(a)
+}
+
+### Return the edges for graph
+getEdges<- function(jobid,nodes){
+  node1<-c()
+  node2<-c()
+  # protein&motif relation
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=","","&rest=occ")
+  x <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+  for (i in 1:length(x$Pattern)){
+    node1<-c(node1,match(x$Seq[i],nodes))
+    node2<-c(node2,match(x$Pattern[i],nodes))
+  }
+  # motif&motif relation
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=","","&rest=main")
+  y <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+  for (i in 1:length(y$Cloud)){
+    for (j in 1:length(y$Cloud)){
+      if (y$Cloud[i]==y$Cloud[j]){
+        if (i != j){
+          node1<-c(node1,match(y$Pattern[i],nodes))
+          node2<-c(node2,match(y$Pattern[j],nodes))
+        }
+      }
+    }
+  }
+  # protein&protein relation
+  joburl = paste0(settings$resturl,"retrieve&jobid=",jobid,"&password=","","&rest=upc")
+  z <- read.delim(joburl,header=TRUE,sep=",",stringsAsFactors=FALSE)
+  for (i in 2:length(z[,1])){
+    proteins <- strsplit(z[,1][i], '\t')[[1]][4]
+    protein<- strsplit(proteins," ")
+    for(m in 1:length(protein[[1]])){
+      for(n in 1:length(protein[[1]])){
+        if (m!=n){ 
+          node1<-c(node1,match(protein[[1]][m],nodes))
+          node2<-c(node2,match(protein[[1]][n],nodes))}
+      }
+    }
+  }
+  M <- cbind(node1,node2)
+  return(M)
+}
+
 
 ############### ::: UPDATE DATA ::: ##################
 #!# This is the old function that needs updating with above functions
@@ -190,6 +437,8 @@ setData = function(jobid,prog="retrieve",password="",extra=c(),formats=c()){
   return(rdata)
 }
 #cat(as.character(pep[1:10,1]))
+
+
 
 ############### ::: SHINY CODE INFO ::: ##################
 #i# This section contains some information comments that can be deleted in actual Apps.
